@@ -920,7 +920,7 @@
         
         <!-- العودة للموقع الرئيسي -->
         <div class="back-to-home">
-<a href="/Main Page.html" class="back-link">
+<a href="Main Page.html" class="back-link">
     <i class="fas fa-arrow-right"></i>
     العودة إلى الموقع الرئيسي
 </a>
@@ -1122,13 +1122,13 @@
                             console.log('🔄 التوجيه إلى لوحة التحكم');
                             
                             // استخدم المسار النسبي الصحيح
-                            window.location.href = '/Dashboard.html';
+                            window.location.href = 'Dashboard.html';
                             
                             // طريقة بديلة إذا لم تعمل الأولى
                             setTimeout(() => {
                                 if (window.location.pathname.indexOf('Login.html') !== -1) {
                                     console.log('🔄 محاولة طريقة توجيه بديلة...');
-                                    window.location.replace('/Dashboard.html');
+                                    window.location.replace('Dashboard.html');
                                 }
                             }, 1000);
                             
