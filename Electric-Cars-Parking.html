@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>كراج سمارت - الموقف الرئيسي</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
+        /* جميع الأنماط تبقى كما هي بدون تغيير */
         * {
             margin: 0;
             padding: 0;
@@ -721,13 +725,48 @@
         .delay-3 { animation-delay: 0.3s; }
         .delay-4 { animation-delay: 0.4s; }
         .delay-5 { animation-delay: 0.5s; }
+        
+        /* رسالة التحديث */
+        .update-message {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(15, 20, 38, 0.9);
+            color: var(--accent);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid var(--accent);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .update-message.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- مؤشر حالة الاتصال مع ESP32 -->
+    <!-- مؤشر حالة الاتصال مع Firebase -->
     <div id="connectionStatus" class="connection-status status-disconnected">
-        <i class="fas fa-microchip"></i>
-        <span>غير متصل بـ ESP32</span>
+        <i class="fas fa-cloud"></i>
+        <span>غير متصل بـ Firebase</span>
+    </div>
+    
+    <!-- رسالة تحديث البيانات -->
+    <div id="updateMessage" class="update-message">
+        <i class="fas fa-sync-alt"></i> جاري تحديث البيانات...
     </div>
     
     <div class="container">
@@ -756,41 +795,20 @@
                 <div class="mini-map">
                     <h3><i class="fas fa-map-marked-alt"></i> خريطة الكراج</h3>
                     <div class="map-container">
-                        <!-- الصف العلوي: B1 إلى B8 -->
+                        <!-- الصف العلوي: B8 إلى B1 (مقلوب) -->
                         <div class="top-row">
-                            <div class="parking-slot fade-in delay-1" data-slot="B1">
-                                <div class="slot-id">B1</div>
-                                <div class="slot-status">
-                                    <span class="status-indicator status-available"></span>
-                                    متاح
-                                </div>
-                            </div>
-                            <div class="parking-slot fade-in delay-2" data-slot="B2">
-                                <div class="slot-id">B2</div>
+                            <div class="parking-slot fade-in delay-1" data-slot="B8">
+                                <div class="slot-id">B8</div>
                                 <div class="slot-status">
                                     <span class="status-indicator status-occupied"></span>
                                     مشغول
                                 </div>
                             </div>
-                            <div class="parking-slot fade-in delay-3" data-slot="B3">
-                                <div class="slot-id">B3</div>
-                                <div class="slot-status">
-                                    <span class="status-indicator status-available"></span>
-                                    متاح
-                                </div>
-                            </div>
-                            <div class="parking-slot fade-in delay-1" data-slot="B4">
-                                <div class="slot-id">B4</div>
+                            <div class="parking-slot fade-in delay-2" data-slot="B7">
+                                <div class="slot-id">B7</div>
                                 <div class="slot-status">
                                     <span class="status-indicator status-occupied"></span>
                                     مشغول
-                                </div>
-                            </div>
-                            <div class="parking-slot fade-in delay-2" data-slot="B5">
-                                <div class="slot-id">B5</div>
-                                <div class="slot-status">
-                                    <span class="status-indicator status-available"></span>
-                                    متاح
                                 </div>
                             </div>
                             <div class="parking-slot fade-in delay-3" data-slot="B6">
@@ -800,18 +818,39 @@
                                     مشغول
                                 </div>
                             </div>
-                            <div class="parking-slot fade-in delay-4" data-slot="B7">
-                                <div class="slot-id">B7</div>
-                                <div class="slot-status">
-                                    <span class="status-indicator status-available"></span>
-                                    متاح
-                                </div>
-                            </div>
-                            <div class="parking-slot fade-in delay-5" data-slot="B8">
-                                <div class="slot-id">B8</div>
+                            <div class="parking-slot fade-in delay-1" data-slot="B5">
+                                <div class="slot-id">B5</div>
                                 <div class="slot-status">
                                     <span class="status-indicator status-occupied"></span>
                                     مشغول
+                                </div>
+                            </div>
+                            <div class="parking-slot fade-in delay-2" data-slot="B4">
+                                <div class="slot-id">B4</div>
+                                <div class="slot-status">
+                                    <span class="status-indicator status-occupied"></span>
+                                    مشغول
+                                </div>
+                            </div>
+                            <div class="parking-slot fade-in delay-3" data-slot="B3">
+                                <div class="slot-id">B3</div>
+                                <div class="slot-status">
+                                    <span class="status-indicator status-occupied"></span>
+                                    مشغول
+                                </div>
+                            </div>
+                            <div class="parking-slot fade-in delay-4" data-slot="B2">
+                                <div class="slot-id">B2</div>
+                                <div class="slot-status">
+                                    <span class="status-indicator status-occupied"></span>
+                                    مشغول
+                                </div>
+                            </div>
+                            <div class="parking-slot fade-in delay-5" data-slot="B1">
+                                <div class="slot-id">B1</div>
+                                <div class="slot-status">
+                                    <span class="status-indicator status-available"></span>
+                                    متاح
                                 </div>
                             </div>
                         </div>
@@ -842,16 +881,16 @@
                                 <div class="parking-slot fade-in delay-3" data-slot="C3">
                                     <div class="slot-id">C3</div>
                                     <div class="slot-status">
-                                        <span class="status-indicator status-available"></span>
-                                        متاح
+                                        <span class="status-indicator status-occupied"></span>
+                                        مشغول
                                     </div>
                                 </div>
                                 <!-- C4, C5, C6 -->
                                 <div class="parking-slot fade-in delay-1" data-slot="C4">
                                     <div class="slot-id">C4</div>
                                     <div class="slot-status">
-                                        <span class="status-indicator status-available"></span>
-                                        متاح
+                                        <span class="status-indicator status-occupied"></span>
+                                        مشغول
                                     </div>
                                 </div>
                                 <div class="parking-slot fade-in delay-2" data-slot="C5">
@@ -864,8 +903,8 @@
                                 <div class="parking-slot fade-in delay-3" data-slot="C6">
                                     <div class="slot-id">C6</div>
                                     <div class="slot-status">
-                                        <span class="status-indicator status-available"></span>
-                                        متاح
+                                        <span class="status-indicator status-occupied"></span>
+                                        مشغول
                                     </div>
                                 </div>
                             </div>
@@ -882,8 +921,8 @@
                                     <div class="parking-slot fade-in delay-1" data-slot="B9">
                                         <div class="slot-id">B9</div>
                                         <div class="slot-status">
-                                            <span class="status-indicator status-available"></span>
-                                            متاح
+                                            <span class="status-indicator status-occupied"></span>
+                                            مشغول
                                         </div>
                                     </div>
                                     <div class="parking-slot fade-in delay-2" data-slot="B10">
@@ -905,8 +944,8 @@
                                 <div class="parking-slot fade-in delay-1" data-slot="A6">
                                     <div class="slot-id">A6</div>
                                     <div class="slot-status">
-                                        <span class="status-indicator status-available"></span>
-                                        متاح
+                                        <span class="status-indicator status-occupied"></span>
+                                        مشغول
                                     </div>
                                 </div>
                                 <div class="parking-slot fade-in delay-2" data-slot="A5">
@@ -919,8 +958,8 @@
                                 <div class="parking-slot fade-in delay-3" data-slot="A4">
                                     <div class="slot-id">A4</div>
                                     <div class="slot-status">
-                                        <span class="status-indicator status-available"></span>
-                                        متاح
+                                        <span class="status-indicator status-occupied"></span>
+                                        مشغول
                                     </div>
                                 </div>
                                 <div class="parking-slot fade-in delay-1" data-slot="A3">
@@ -933,15 +972,15 @@
                                 <div class="parking-slot fade-in delay-2" data-slot="A2">
                                     <div class="slot-id">A2</div>
                                     <div class="slot-status">
-                                        <span class="status-indicator status-available"></span>
-                                        متاح
+                                        <span class="status-indicator status-occupied"></span>
+                                        مشغول
                                     </div>
                                 </div>
                                 <div class="parking-slot fade-in delay-3" data-slot="A1">
                                     <div class="slot-id">A1</div>
                                     <div class="slot-status">
-                                        <span class="status-indicator status-occupied"></span>
-                                        مشغول
+                                        <span class="status-indicator status-available"></span>
+                                        متاح
                                     </div>
                                 </div>
                             </div>
@@ -967,20 +1006,24 @@
                         </div>
                         <div class="data-item">
                             <div class="data-label">
-                                <i class="fas fa-battery-half"></i>
-                                سعة البطارية:
+                                <i class="fas fa-bolt"></i>
+                                التيار (mA):
                             </div>
-                            <div class="data-value" id="batteryLevel">85%</div>
-                            <div class="battery-level">
-                                <div class="battery-fill" id="batteryFill" style="width: 85%"></div>
+                            <div class="data-value" id="currentLevel">0</div>
+                        </div>
+                        <div class="data-item">
+                            <div class="data-label">
+                                <i class="fas fa-bolt"></i>
+                                الجهد (V):
                             </div>
+                            <div class="data-value" id="voltageLevel">0</div>
                         </div>
                         <div class="data-item">
                             <div class="data-label">
                                 <i class="fas fa-temperature-high"></i>
                                 درجة الحرارة:
                             </div>
-                            <div class="data-value" id="temperature">32°C</div>
+                            <div class="data-value" id="temperature">0°C</div>
                         </div>
                         <div class="data-item">
                             <div class="data-label">
@@ -1010,147 +1053,274 @@
     </div>
 
     <script>
-        // بيانات لكل موقف
-        const slotData = {
-            // الصف العلوي: B1 إلى B8
-            'B1': { status: 'متاح', battery: 90, temperature: 28, lastUpdate: '14:30:22' },
-            'B2': { status: 'مشغول', battery: 45, temperature: 30, lastUpdate: '14:28:15' },
-            'B3': { status: 'متاح', battery: 80, temperature: 27, lastUpdate: '14:32:10' },
-            'B4': { status: 'مشغول', battery: 60, temperature: 31, lastUpdate: '14:29:45' },
-            'B5': { status: 'متاح', battery: 95, temperature: 26, lastUpdate: '14:31:30' },
-            'B6': { status: 'مشغول', battery: 35, temperature: 32, lastUpdate: '14:27:55' },
-            'B7': { status: 'متاح', battery: 75, temperature: 29, lastUpdate: '14:33:20' },
-            'B8': { status: 'مشغول', battery: 50, temperature: 33, lastUpdate: '14:30:05' },
-            
-            // الجانب الأيمن: A6 إلى A1
-            'A6': { status: 'متاح', battery: 85, temperature: 28, lastUpdate: '14:31:15' },
-            'A5': { status: 'مشغول', battery: 40, temperature: 31, lastUpdate: '14:28:40' },
-            'A4': { status: 'متاح', battery: 70, temperature: 27, lastUpdate: '14:32:55' },
-            'A3': { status: 'مشغول', battery: 55, temperature: 30, lastUpdate: '14:29:20' },
-            'A2': { status: 'متاح', battery: 88, temperature: 26, lastUpdate: '14:33:45' },
-            'A1': { status: 'مشغول', battery: 30, temperature: 34, lastUpdate: '14:27:30' },
-            
-            // الجانب الأيسر: C1 إلى C6
-            'C1': { status: 'متاح', battery: 83, temperature: 27, lastUpdate: '14:32:05' },
-            'C2': { status: 'مشغول', battery: 65, temperature: 29, lastUpdate: '14:29:10' },
-            'C3': { status: 'متاح', battery: 78, temperature: 28, lastUpdate: '14:33:35' },
-            'C4': { status: 'متاح', battery: 87, temperature: 26, lastUpdate: '14:30:50' },
-            'C5': { status: 'مشغول', battery: 42, temperature: 31, lastUpdate: '14:28:25' },
-            'C6': { status: 'متاح', battery: 95, temperature: 24, lastUpdate: '14:34:00' },
-            
-            // المنطقة الوسطى: B9, B10
-            'B9': { status: 'متاح', battery: 92, temperature: 25, lastUpdate: '14:31:40' },
-            'B10': { status: 'مشغول', battery: 48, temperature: 32, lastUpdate: '14:29:55' }
+        // ==================== إعدادات Firebase ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAR-Ox5VL_669Ruyy6aXmjglqd804zC7ig",
+            authDomain: "smart-garage-database.firebaseapp.com",
+            databaseURL: "https://smart-garage-database-default-rtdb.firebaseio.com",
+            projectId: "smart-garage-database",
+            storageBucket: "smart-garage-database.appspot.com",
+            messagingSenderId: "1066839766442",
+            appId: "1:1066839766442:web:7b2a0f2218aa769ed0e6be"
         };
 
-        // حالة الاتصال مع ESP32
-        let espConnected = false;
+        // تهيئة Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log("✅ Firebase initialized successfully");
+        } catch (error) {
+            console.error("❌ Firebase initialization error:", error);
+        }
+        
+        const database = firebase.database();
 
-        // وظيفة لمحاكاة الاتصال مع ESP32
-        function simulateESP32Connection() {
-            const connectionStatus = document.getElementById('connectionStatus');
+        // ==================== متغيرات النظام ====================
+        let firebaseConnected = false;
+        let currentSelectedSlot = null;
+        
+        // المواقف التي يراقبها ESP32 (المسار الصحيح: smart_garage/parking/)
+        const espSlots = ['A1', 'B1', 'C1'];
+        
+        // بيانات المواقف (الحالة الأولية حسب بيانات Firebase الحالية)
+        let slotData = {
+            'A1': { 
+                status: 'متاح', 
+                current: 0, 
+                voltage: 0, 
+                temperature: 30, 
+                distance: 999,
+                lastUpdate: 'online' 
+            },
+            'B1': { 
+                status: 'متاح', 
+                current: 0, 
+                voltage: 0, 
+                temperature: 30, 
+                distance: 999,
+                lastUpdate: 'online' 
+            },
+            'C1': { 
+                status: 'مشغول', 
+                current: 0, 
+                voltage: 0, 
+                temperature: 30, 
+                distance: 2.057,
+                lastUpdate: 'online' 
+            }
+        };
+
+        // ==================== دوال Firebase ====================
+
+        // إظهار رسالة تحديث
+        function showUpdateMessage(message) {
+            const updateMessage = document.getElementById('updateMessage');
+            updateMessage.innerHTML = `<i class="fas fa-sync-alt"></i> ${message}`;
+            updateMessage.classList.add('show');
             
-            // تبديل حالة الاتصال كل 30 ثانية
-            setInterval(() => {
-                espConnected = !espConnected;
-                
-                if (espConnected) {
-                    connectionStatus.className = 'connection-status status-connected';
-                    connectionStatus.innerHTML = '<i class="fas fa-microchip"></i><span>متصل بـ ESP32</span>';
-                    
-                    // تحديث حالة المواقف بشكل عشوائي عند الاتصال
-                    updateRandomSlots();
-                } else {
-                    connectionStatus.className = 'connection-status status-disconnected';
-                    connectionStatus.innerHTML = '<i class="fas fa-microchip"></i><span>غير متصل بـ ESP32</span>';
-                }
-            }, 30000);
-            
-            // الاتصال المبدئي بعد 3 ثواني
             setTimeout(() => {
-                espConnected = true;
-                connectionStatus.className = 'connection-status status-connected';
-                connectionStatus.innerHTML = '<i class="fas fa-microchip"></i><span>متصل بـ ESP32</span>';
-            }, 3000);
+                updateMessage.classList.remove('show');
+            }, 2000);
         }
 
-        // وظيفة لتحديث المواقف بشكل عشوائي (لمحاكاة بيانات ESP32 الحقيقية)
-        function updateRandomSlots() {
-            if (!espConnected) return;
+        // تحديث حالة الاتصال
+        function updateConnectionStatus() {
+            const connectionStatus = document.getElementById('connectionStatus');
             
-            // تحديث 2-3 مواقف عشوائياً في كل مرة
-            const slots = Object.keys(slotData);
-            const numToUpdate = Math.floor(Math.random() * 2) + 2; // 2-3 مواقف
-            
-            for (let i = 0; i < numToUpdate; i++) {
-                const randomSlot = slots[Math.floor(Math.random() * slots.length)];
-                const slotElement = document.querySelector(`[data-slot="${randomSlot}"]`);
-                
-                // تحديث البيانات بشكل عشوائي
-                const newStatus = Math.random() > 0.5 ? 'متاح' : 'مشغول';
-                const newBattery = Math.floor(Math.random() * 100);
-                const newTemp = Math.floor(Math.random() * 15) + 25; // 25-40 درجة
-                const now = new Date();
-                const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
-                                  now.getMinutes().toString().padStart(2, '0') + ':' + 
-                                  now.getSeconds().toString().padStart(2, '0');
-                
-                // تحديث البيانات
-                slotData[randomSlot] = {
-                    status: newStatus,
-                    battery: newBattery,
-                    temperature: newTemp,
-                    lastUpdate: timeString
-                };
-                
-                // تحديث العرض البصري
-                if (slotElement) {
-                    const statusIndicator = slotElement.querySelector('.status-indicator');
-                    const statusText = slotElement.querySelector('.slot-status');
-                    
-                    if (newStatus === 'متاح') {
-                        statusIndicator.className = 'status-indicator status-available';
-                        statusText.innerHTML = '<span class="status-indicator status-available"></span> متاح';
-                    } else {
-                        statusIndicator.className = 'status-indicator status-occupied';
-                        statusText.innerHTML = '<span class="status-indicator status-occupied"></span> مشغول';
-                    }
-                    
-                    // إضافة تأثير التحديث
-                    slotElement.style.animation = 'none';
-                    setTimeout(() => {
-                        slotElement.style.animation = '';
-                    }, 10);
-                }
+            if (firebaseConnected) {
+                connectionStatus.className = 'connection-status status-connected';
+                connectionStatus.innerHTML = '<i class="fas fa-cloud"></i><span>متصل بـ Firebase</span>';
+            } else {
+                connectionStatus.className = 'connection-status status-disconnected';
+                connectionStatus.innerHTML = '<i class="fas fa-cloud-slash"></i><span>غير متصل بـ Firebase</span>';
             }
         }
 
-        // عرض تفاصيل ESP عند النقر على موقف
+        // مراقبة موقف معين مع المسار الصحيح
+        function monitorSlot(slotId) {
+            // المسار الصحيح بناء على هيكل Firebase
+            const slotRef = database.ref(`smart_garage/parking/${slotId}`);
+            
+            console.log(`🔍 بدء مراقبة الموقع ${slotId}...`);
+            console.log(`📡 المسار: smart_garage/parking/${slotId}`);
+            
+            slotRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                console.log(`📊 تم تحديث بيانات ${slotId}:`, data);
+                
+                if (data) {
+                    // تحديث البيانات المحلية بناء على هيكل Firebase
+                    const isOccupied = data.occupied === true;
+                    
+                    // استخراج بيانات الشحن إذا كانت موجودة
+                    let current = 0;
+                    let voltage = 0;
+                    
+                    if (data.charging && typeof data.charging === 'object') {
+                        current = data.charging.current || 0;
+                        voltage = data.charging.voltage || 0;
+                    }
+                    
+                    slotData[slotId] = {
+                        status: isOccupied ? 'مشغول' : 'متاح',
+                        current: current,
+                        voltage: voltage,
+                        temperature: data.temperature || 30,
+                        distance: data.ultrasonic_cm || 999,
+                        lastUpdate: data.last_update || 'online'
+                    };
+                    
+                    // تحديث الواجهة لهذا الموقف
+                    updateSlotUI(slotId);
+                    
+                    // إذا كان هذا الموقف محدد حالياً، قم بتحديث تفاصيله
+                    if (currentSelectedSlot === slotId) {
+                        updateSlotDetails(slotId);
+                    }
+                    
+                    // إظهار رسالة تحديث
+                    const statusText = isOccupied ? 'مشغول' : 'متاح';
+                    showUpdateMessage(`تم تحديث الموقف ${slotId} إلى: ${statusText}`);
+                    
+                    firebaseConnected = true;
+                    updateConnectionStatus();
+                } else {
+                    console.log(`⚠️ لا توجد بيانات للموقف ${slotId} في Firebase`);
+                }
+            }, (error) => {
+                console.error(`❌ خطأ في قراءة بيانات ${slotId}:`, error);
+                console.error(`🔧 تفاصيل الخطأ:`, error.message);
+                firebaseConnected = false;
+                updateConnectionStatus();
+            });
+        }
+
+        // بدء مراقبة جميع المواقف
+        function startMonitoring() {
+            console.log('🚀 بدء مراقبة المواقف الحقيقية...');
+            console.log('📍 المسار الأساسي: smart_garage/parking/');
+            
+            // اختبار الاتصال أولاً
+            const testRef = database.ref('smart_garage');
+            testRef.once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        console.log('✅ تم الاتصال بنجاح مع Firebase');
+                        console.log('📁 الهيكل المتاح:', Object.keys(snapshot.val()));
+                        
+                        // بدء مراقبة المواقف
+                        espSlots.forEach(slotId => {
+                            monitorSlot(slotId);
+                        });
+                        
+                        // تحديث الواجهة بالحالة الأولية
+                        espSlots.forEach(slotId => {
+                            updateSlotUI(slotId);
+                        });
+                        
+                        firebaseConnected = true;
+                        updateConnectionStatus();
+                        showUpdateMessage('تم الاتصال بـ Firebase بنجاح');
+                    } else {
+                        console.log('⚠️ قاعدة البيانات موجودة ولكنها فارغة');
+                        showUpdateMessage('قاعدة البيانات فارغة');
+                    }
+                })
+                .catch((error) => {
+                    console.error('❌ فشل الاتصال بـ Firebase:', error);
+                    showUpdateMessage('فشل الاتصال بـ Firebase');
+                });
+        }
+
+        // ==================== دوال الواجهة ====================
+
+        // تحديث واجهة موقف معين
+        function updateSlotUI(slotId) {
+            const slotElement = document.querySelector(`[data-slot="${slotId}"]`);
+            if (!slotElement) {
+                console.log(`عنصر ${slotId} غير موجود في الواجهة`);
+                return;
+            }
+            
+            const data = slotData[slotId];
+            const statusIndicator = slotElement.querySelector('.status-indicator');
+            const statusText = slotElement.querySelector('.slot-status');
+            
+            if (!statusIndicator || !statusText) {
+                console.log(`عناصر الواجهة لـ ${slotId} غير موجودة`);
+                return;
+            }
+            
+            console.log(`تحديث واجهة ${slotId} إلى: ${data.status}`);
+            
+            if (data.status === 'متاح') {
+                statusIndicator.className = 'status-indicator status-available';
+                statusText.innerHTML = '<span class="status-indicator status-available"></span> متاح';
+            } else {
+                statusIndicator.className = 'status-indicator status-occupied';
+                statusText.innerHTML = '<span class="status-indicator status-occupied"></span> مشغول';
+            }
+            
+            // إضافة تأثير مرئي للتحديث
+            slotElement.style.backgroundColor = 'rgba(255, 165, 0, 0.3)';
+            setTimeout(() => {
+                slotElement.style.backgroundColor = '';
+            }, 500);
+        }
+
+        // تحديث تفاصيل الموقف المحدد
+        function updateSlotDetails(slotId) {
+            const data = slotData[slotId];
+            
+            if (data) {
+                document.getElementById('detailsTitle').textContent = `تفاصيل الموقف ${slotId}`;
+                document.getElementById('slotStatus').textContent = data.status;
+                
+                // تحويل التيار إلى ملي أمبير (mA)
+                const currentInMA = Math.round(data.current * 1000);
+                document.getElementById('currentLevel').textContent = `${currentInMA} mA`;
+                
+                // عرض الجهد بالفولت
+                document.getElementById('voltageLevel').textContent = `${data.voltage.toFixed(2)} V`;
+                
+                document.getElementById('temperature').textContent = `${data.temperature.toFixed(1)}°C`;
+                document.getElementById('lastUpdate').textContent = data.lastUpdate;
+            }
+        }
+
+        // الحصول على الوقت الحالي
+        function getCurrentTime() {
+            const now = new Date();
+            return now.getHours().toString().padStart(2, '0') + ':' +
+                   now.getMinutes().toString().padStart(2, '0') + ':' +
+                   now.getSeconds().toString().padStart(2, '0');
+        }
+
+        // ==================== معالجات الأحداث ====================
+
+        // النقر على موقف
         document.querySelectorAll('.parking-slot').forEach(slot => {
             slot.addEventListener('click', function() {
                 const slotId = this.getAttribute('data-slot');
-                const data = slotData[slotId];
                 
-                // تحديث البيانات في تفاصيل ESP
-                document.getElementById('detailsTitle').textContent = `تفاصيل الموقف ${slotId}`;
-                document.getElementById('slotStatus').textContent = data.status;
-                document.getElementById('batteryLevel').textContent = `${data.battery}%`;
-                document.getElementById('batteryFill').style.width = `${data.battery}%`;
-                document.getElementById('temperature').textContent = `${data.temperature}°C`;
-                document.getElementById('lastUpdate').textContent = data.lastUpdate;
-                
-                // إظهار تفاصيل ESP
-                document.getElementById('espDetails').classList.add('active');
-                
-                // توجيه الشاشة إلى تفاصيل الموقف
-                document.getElementById('espDetails').scrollIntoView({ 
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-                
-                // إذا كان متصلاً بـ ESP32، إرسال طلب للحصول على بيانات حديثة
-                if (espConnected) {
-                    console.log(`طلب بيانات حديثة للموقف ${slotId} من ESP32`);
+                // التحقق إذا كان الموقف من A1, B1, C1
+                if (espSlots.includes(slotId)) {
+                    currentSelectedSlot = slotId;
+                    updateSlotDetails(slotId);
+                    
+                    // إظهار تفاصيل ESP
+                    const espDetails = document.getElementById('espDetails');
+                    espDetails.classList.add('active');
+                    
+                    // توجيه الشاشة إلى تفاصيل الموقف
+                    espDetails.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                    
+                    console.log(`🎯 تم اختيار الموقف ${slotId}`);
+                } else {
+                    console.log(`🚫 الموقف ${slotId} لا يدعم التفاصيل`);
+                    alert(`🚫 الموقف ${slotId} هو موقف افتراضي\n✅ المواقف الحقيقية فقط: A1, B1, C1`);
                 }
             });
         });
@@ -1158,33 +1328,51 @@
         // إغلاق تفاصيل ESP
         document.getElementById('closeDetails').addEventListener('click', function() {
             document.getElementById('espDetails').classList.remove('active');
+            currentSelectedSlot = null;
         });
 
-        // تأثيرات ظهور متتالية للعناصر
+        // ==================== تهيئة النظام ====================
+
         document.addEventListener('DOMContentLoaded', function() {
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
+            console.log('🚗 بدء تشغيل نظام كراج السيارات الذكي...');
+            console.log('📋 المواقف المراقبة:', espSlots);
             
-            const observer = new IntersectionObserver(function(entries) {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.animationPlayState = 'running';
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, observerOptions);
+            // بدء مراقبة Firebase
+            setTimeout(() => {
+                try {
+                    startMonitoring();
+                    console.log('✅ بدأت مراقبة Firebase للمواقف: A1, B1, C1');
+                    showUpdateMessage('جاري الاتصال بـ Firebase...');
+                } catch (error) {
+                    console.error('❌ خطأ في بدء المراقبة:', error);
+                    showUpdateMessage('خطأ في الاتصال بـ Firebase');
+                }
+            }, 1000);
             
-            document.querySelectorAll('.fade-in').forEach(el => {
-                observer.observe(el);
-            });
+            // تحديث حالة الاتصال بشكل دوري
+            setInterval(() => {
+                if (!firebaseConnected) {
+                    console.log('🔄 فقد الاتصال بـ Firebase، جاري إعادة المحاولة...');
+                    startMonitoring();
+                }
+            }, 15000);
             
-            // بدء محاكاة الاتصال مع ESP32
-            simulateESP32Connection();
-            
-            // بدء التحديث التلقائي للمواقف كل 10 ثواني
-            setInterval(updateRandomSlots, 10000);
+            // تحديث تلقائي للتفاصيل كل 3 ثواني
+            setInterval(() => {
+                if (firebaseConnected && currentSelectedSlot) {
+                    updateSlotDetails(currentSelectedSlot);
+                }
+            }, 3000);
+        });
+
+        // إعادة تحميل البيانات عند الضغط على F5
+        window.addEventListener('keydown', function(event) {
+            if (event.key === 'F5') {
+                event.preventDefault();
+                console.log('🔄 إعادة تحميل البيانات من Firebase...');
+                startMonitoring();
+                showUpdateMessage('جاري إعادة تحميل البيانات...');
+            }
         });
     </script>
 </body>
