@@ -2,1092 +2,760 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>داشبورد التحكم - سمارت كراج الشمسي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Smart Parking Dashboard</title>
+    <!-- Google Fonts + Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Firebase Compat SDK (Realtime Database) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
-        /* CSS Reset */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         :root {
-            /* نظام الألوان البرتقالي المحسن */
-            --primary: #ffa500;
-            --secondary: #b21f1f;
-            --accent: #FFA500;
-            --dark: #0f1426;
-            --light: #f8f9fa;
-            --orange-light: #ffd699;
-            --orange-medium: #ff9900;
-            --orange-dark: #cc8400;
-            --dark-transparent: rgba(15, 20, 38, 0.92);
-            --darker-transparent: rgba(10, 15, 30, 0.97);
-            
-            /* ألوان الحالة */
-            --success: #2ecc71;
-            --error: #e74c3c;
-            --warning: #f39c12;
-            --info: #3498db;
-            
-            /* الظلال */
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
-            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
-            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.3);
-            --shadow-xl: 0 15px 40px rgba(0, 0, 0, 0.4);
-            
-            /* الزوايا */
-            --radius-sm: 10px;
-            --radius-md: 15px;
-            --radius-lg: 20px;
-            --radius-xl: 25px;
-            
-            /* التحولات */
-            --transition-fast: 200ms ease;
-            --transition-medium: 300ms ease;
-            --transition-slow: 500ms ease;
+            --bg-deep:       #060a12;
+            --bg-card:       rgba(10, 17, 30, 0.82);
+            --border-dim:    rgba(0, 220, 170, 0.14);
+            --border-lit:    rgba(0, 255, 195, 0.55);
+            --accent-cyan:   #00e5b8;
+            --accent-green:  #00ff88;
+            --accent-amber:  #ffb340;
+            --accent-red:    #ff3055;
+            --text-primary:  #e8f4ff;
+            --text-muted:    rgba(200, 220, 240, 0.6);
+            --glow-cyan:     0 0 8px rgba(0, 229, 184, 0.7);
+            --glow-green:    0 0 8px rgba(0, 255, 136, 0.7);
+            --glow-amber:    0 0 8px rgba(255, 179, 64, 0.7);
+            --glow-red:      0 0 8px rgba(255, 48, 85, 0.7);
+            --radius-card:   1.25rem;
+            --radius-badge:  3rem;
         }
-        
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', 'Tahoma', Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, 
-                #0f1426 0%, 
-                #1a2238 30%, 
-                #0f1426 70%, 
-                #1a2238 100%);
-            background-size: 400% 400%;
-            animation: gradientBackground 20s ease infinite;
-            color: #e0e0e0;
+            background: var(--bg-deep);
+            font-family: 'Cairo', sans-serif;
+            color: var(--text-primary);
+            padding: 1.25rem;
+            line-height: 1.5;
             min-height: 100vh;
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
+            /* layered mesh background */
+            background-image:
+                radial-gradient(ellipse 80% 60% at 10% 0%, rgba(0, 120, 90, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 90% 100%, rgba(0, 80, 150, 0.1) 0%, transparent 55%),
+                linear-gradient(rgba(0, 200, 140, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 200, 140, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 38px 38px, 38px 38px;
         }
-        
-        @keyframes gradientBackground {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-        
-        /* تأثيرات خلفية إضافية */
+
+        /* scanline overlay */
         body::before {
             content: '';
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 10% 20%, rgba(255, 165, 0, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(255, 204, 128, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(255, 183, 77, 0.03) 0%, transparent 50%);
-            z-index: -1;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 3px,
+                rgba(0, 0, 0, 0.07) 3px,
+                rgba(0, 0, 0, 0.07) 4px
+            );
             pointer-events: none;
+            z-index: 0;
         }
-        
-        .container {
-            max-width: 1400px;
+
+        .dashboard-container {
+            max-width: 1600px;
             margin: 0 auto;
-            animation: fadeIn 800ms ease;
+            direction: rtl;
+            position: relative;
+            z-index: 1;
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* الهيدر */
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 25px 30px;
-            margin-bottom: 30px;
-            background: var(--dark-transparent);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-lg);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 165, 0, 0.2);
+
+        /* ── Cards ── */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-card);
+            box-shadow:
+                0 4px 24px rgba(0, 0, 0, 0.55),
+                inset 0 1px 0 rgba(0, 230, 180, 0.08);
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+            padding: 1.35rem 1.6rem;
             position: relative;
             overflow: hidden;
         }
-        
-        .dashboard-header::before {
+
+        /* subtle corner accent */
+        .glass-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, 
-                transparent, 
-                var(--orange-light), 
-                var(--accent), 
-                var(--orange-dark), 
-                transparent);
-            background-size: 200% 100%;
-            animation: shimmer 3s linear infinite;
+            top: 0; right: 0;
+            width: 3.5rem; height: 3.5rem;
+            background: linear-gradient(135deg, rgba(0, 220, 170, 0.18) 0%, transparent 60%);
+            border-radius: 0 var(--radius-card) 0 0;
         }
-        
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
+
+        .glass-card:hover {
+            border-color: var(--border-lit);
+            box-shadow:
+                0 6px 32px rgba(0, 0, 0, 0.6),
+                0 0 20px rgba(0, 229, 184, 0.12),
+                inset 0 1px 0 rgba(0, 230, 180, 0.14);
         }
-        
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 20px;
+
+        /* ── Typography ── */
+        h1 {
+            font-size: clamp(1.15rem, 3.5vw, 1.65rem);
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.3px;
         }
-        
-        .logo-icon {
-            font-size: 2.8rem;
-            color: var(--accent);
-            filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.5));
-            animation: pulse 3s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .logo-text h1 {
-            font-size: 2.2rem;
-            color: white;
-            margin-bottom: 5px;
-            background: linear-gradient(to right, #fff, #ffd699);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        
-        .logo-text p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1rem;
-        }
-        
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 12px 20px;
-            border-radius: var(--radius-md);
-            border: 1px solid rgba(255, 165, 0, 0.2);
-        }
-        
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--success);
-            animation: blink 2s infinite;
-        }
-        
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .status-text {
-            font-size: 1rem;
-            color: rgba(255, 255, 255, 0.9);
-        }
-        
-        /* شبكة البطاقات */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-        
-        /* البطاقات */
-        .dashboard-card {
-            background: var(--dark-transparent);
-            border-radius: var(--radius-xl);
-            padding: 25px;
-            box-shadow: var(--shadow-md);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all var(--transition-medium);
+
+        h2 {
+            font-size: clamp(0.95rem, 2.5vw, 1.2rem);
+            font-weight: 700;
+            color: var(--accent-cyan);
+            border-right: 3px solid var(--accent-cyan);
+            padding-right: 0.65rem;
+            margin-bottom: 1.1rem;
+            text-shadow: var(--glow-cyan);
             position: relative;
-            overflow: hidden;
         }
-        
-        .dashboard-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-lg);
-            border-color: rgba(255, 165, 0, 0.3);
+
+        /* ── Badges ── */
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 1.1rem;
+            border-radius: var(--radius-badge);
+            font-weight: 700;
+            font-size: 0.88rem;
+            backdrop-filter: blur(6px);
+            white-space: nowrap;
         }
-        
-        .card-header {
+
+        /* ── Neon palette ── */
+        .neon-green  { color: var(--accent-green);  text-shadow: var(--glow-green); }
+        .neon-red    { color: var(--accent-red);    text-shadow: var(--glow-red); }
+        .neon-yellow { color: var(--accent-amber);  text-shadow: var(--glow-amber); }
+        .glow-text   { color: var(--accent-cyan);   font-weight: 700; text-shadow: var(--glow-cyan); }
+
+        .revenue-glow {
+            color: var(--accent-green);
+            font-weight: 900;
+            font-size: clamp(1.2rem, 4vw, 1.6rem);
+            text-shadow: var(--glow-green);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── Status badges ── */
+        .online-badge {
+            background: rgba(0, 255, 136, 0.12);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            text-shadow: var(--glow-green);
+        }
+        .offline-badge {
+            background: rgba(255, 48, 85, 0.15);
+            border: 1px solid var(--accent-red);
+            color: #ff7090;
+            animation: blinkRed 1.3s infinite;
+        }
+        @keyframes blinkRed {
+            0%   { background: rgba(255, 48, 85, 0.12); border-color: var(--accent-red); text-shadow: none; }
+            50%  { background: rgba(255, 48, 85, 0.45); border-color: #ff7090; text-shadow: var(--glow-red); }
+            100% { background: rgba(255, 48, 85, 0.12); border-color: var(--accent-red); text-shadow: none; }
+        }
+
+        /* ── Alert flash ── */
+        .alert-flash {
+            animation: flashRedBg 0.9s infinite;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-badge);
+        }
+        @keyframes flashRedBg {
+            0%   { background: rgba(255, 48, 85, 0.15);  color: #ff8898; text-shadow: none; }
+            50%  { background: rgba(255, 30, 60, 0.75);  color: #ffffff;  text-shadow: var(--glow-red); }
+            100% { background: rgba(255, 48, 85, 0.15);  color: #ff8898; text-shadow: none; }
+        }
+
+        /* ── Grids ── */
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 1.4rem;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.2rem;
+        }
+        .full-width { grid-column: 1 / -1; }
+
+        /* ── Sensor rows ── */
+        .sensor-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            border-bottom: 1px solid rgba(0, 200, 150, 0.12);
+            padding: 0.6rem 0;
         }
-        
-        .card-title {
+        .sensor-row:last-child { border-bottom: none; }
+
+        .sensor-label {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-muted);
             display: flex;
             align-items: center;
-            gap: 12px;
-            color: white;
-            font-size: 1.4rem;
+            gap: 0.4rem;
+        }
+        .sensor-label i { width: auto; font-size: 0.85rem; color: var(--accent-cyan); opacity: 0.8; }
+
+        .sensor-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.15rem;
+            direction: ltr;
+            display: inline-block;
+            color: var(--text-primary);
+        }
+
+        .unit {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-right: 0.15rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .health-status {
+            margin-top: 0.9rem;
+            padding: 0.6rem 0.8rem;
+            border-radius: 0.75rem;
+            background: rgba(0, 200, 150, 0.05);
+            border: 1px solid rgba(0, 200, 150, 0.1);
             font-weight: 600;
-        }
-        
-        .card-title i {
-            color: var(--accent);
-            font-size: 1.6rem;
-        }
-        
-        .card-badge {
-            background: rgba(255, 165, 0, 0.2);
-            color: var(--accent);
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            border: 1px solid rgba(255, 165, 0, 0.3);
-        }
-        
-        /* بطاقة النظام الشمسي */
-        .solar-status {
             display: flex;
             align-items: center;
-            gap: 20px;
-            margin-bottom: 25px;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
         }
-        
-        .solar-icon {
-            font-size: 3.5rem;
-            color: #FFD700;
-            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.5));
+        .health-status i { width: auto; }
+
+        hr {
+            border: none;
+            border-top: 1px solid rgba(0, 200, 150, 0.15);
+            margin: 0.8rem 0;
         }
-        
-        .solar-info h3 {
-            font-size: 1.8rem;
-            color: #FFD700;
-            margin-bottom: 5px;
+
+        button, .badge-icon {
+            background: none;
+            border: none;
         }
-        
-        .solar-info p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1rem;
+
+        i { width: 1.6rem; font-size: 1.1rem; }
+
+        /* ── Health component rows ── */
+        .health-comp-item {
+            padding: 0.55rem 0.8rem;
+            border-radius: 0.7rem;
+            background: rgba(0, 180, 130, 0.04);
+            border: 1px solid rgba(0, 200, 150, 0.1);
+            transition: background 0.2s;
         }
-        
-        /* شريط التقدم */
-        .progress-container {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            height: 10px;
-            overflow: hidden;
-            margin: 15px 0;
+        .health-comp-item:hover {
+            background: rgba(0, 180, 130, 0.09);
         }
-        
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--orange-light), var(--accent));
-            border-radius: 10px;
-            transition: width 1s ease;
-            position: relative;
-            overflow: hidden;
+        .health-comp-item > div {
+            gap: 0.5rem;
+            font-size: 0.85rem;
         }
-        
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, 
-                transparent, 
-                rgba(255, 255, 255, 0.3), 
-                transparent);
-            animation: progressShimmer 2s infinite;
+        .health-comp-item > div span:first-child {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text-muted);
         }
-        
-        @keyframes progressShimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-        
-        .progress-info {
+
+        /* ── Header ── */
+        .header-flex {
             display: flex;
             justify-content: space-between;
-            margin-top: 10px;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.95rem;
-        }
-        
-        /* بطاقة البطاريات */
-        .battery-metrics {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .metric-box {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: var(--radius-md);
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all var(--transition-fast);
-        }
-        
-        .metric-box:hover {
-            border-color: rgba(255, 165, 0, 0.3);
-            transform: translateY(-3px);
-        }
-        
-        .metric-value {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 5px;
-        }
-        
-        .metric-label {
-            font-size: 0.95rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        /* بطاقة الحساسات */
-        .sensors-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-        
-        .sensor-item {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: var(--radius-md);
-            display: flex;
             align-items: center;
-            gap: 15px;
-            border: 1px solid transparent;
-            transition: all var(--transition-fast);
+            flex-wrap: wrap;
+            margin-bottom: 1.6rem;
+            gap: 0.9rem;
+            padding: 1.1rem 1.5rem;
+            background: rgba(10, 17, 30, 0.7);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-card);
+            backdrop-filter: blur(16px);
         }
-        
-        .sensor-item.active {
-            border-color: var(--success);
-            background: rgba(46, 204, 113, 0.1);
+
+        .last-ping-text {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 0.25rem;
         }
-        
-        .sensor-item.inactive {
-            border-color: var(--error);
-            background: rgba(231, 76, 60, 0.1);
+
+        .glowing-icon {
+            color: var(--accent-amber);
+            text-shadow: var(--glow-amber);
         }
-        
-        .sensor-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-        
-        .sensor-icon.active {
-            background: rgba(46, 204, 113, 0.2);
-            color: var(--success);
-        }
-        
-        .sensor-icon.inactive {
-            background: rgba(231, 76, 60, 0.2);
-            color: var(--error);
-        }
-        
-        .sensor-info h4 {
-            color: white;
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-        
-        .sensor-info p {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        /* بطاقة الحرارة */
-        .temperature-display {
+
+        /* ── Footer note ── */
+        .footer-note {
+            margin-top: 0.6rem;
+            font-size: 0.67rem;
             text-align: center;
-            padding: 20px;
+            color: var(--text-muted);
+            opacity: 0.55;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.5px;
         }
-        
-        .temp-value {
-            font-size: 4rem;
-            font-weight: 700;
-            background: linear-gradient(to bottom, #fff, #ffd699);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 10px;
-            position: relative;
-            display: inline-block;
-        }
-        
-        .temp-value::after {
-            content: '°C';
-            font-size: 2rem;
-            position: absolute;
-            top: 10px;
-            right: -40px;
-            color: var(--accent);
-        }
-        
-        .temp-status {
-            display: inline-block;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-top: 10px;
-        }
-        
-        .temp-normal {
-            background: rgba(46, 204, 113, 0.2);
-            color: var(--success);
-            border: 1px solid rgba(46, 204, 113, 0.3);
-        }
-        
-        .temp-high {
-            background: rgba(231, 76, 60, 0.2);
-            color: var(--error);
-            border: 1px solid rgba(231, 76, 60, 0.3);
-        }
-        
-        /* إحصائيات اليوم */
-        .stats-overview {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-        
-        .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: var(--radius-lg);
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all var(--transition-fast);
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(255, 165, 0, 0.3);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .stat-icon {
-            font-size: 2.5rem;
-            color: var(--accent);
-            margin-bottom: 15px;
-        }
-        
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1rem;
-        }
-        
-        /* تذييل الصفحة */
-        .dashboard-footer {
-            text-align: center;
-            padding: 25px;
-            margin-top: 40px;
-            background: rgba(15, 20, 38, 0.5);
-            border-radius: var(--radius-xl);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9rem;
-        }
-        
-        /* تصميم متجاوب */
-        @media (max-width: 1200px) {
-            .dashboard-grid {
+
+        /* ── RESPONSIVE ── */
+
+        /* Tablet: 2 columns for grid-4 */
+        @media (max-width: 1100px) {
+            .grid-4 {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-        
-        @media (max-width: 768px) {
-            .dashboard-header {
+
+        /* Mobile: 1 column for everything */
+        @media (max-width: 640px) {
+            body {
+                padding: 0.75rem;
+            }
+
+            .header-flex {
                 flex-direction: column;
-                gap: 20px;
-                text-align: center;
+                align-items: flex-start;
+                padding: 0.9rem 1.1rem;
+                gap: 0.75rem;
             }
-            
-            .dashboard-grid {
+
+            #espStatusBadge {
+                width: 100%;
+                justify-content: center;
+                font-size: 0.82rem;
+                padding: 0.5rem 0.8rem;
+            }
+
+            h1 {
+                font-size: 1.05rem;
+            }
+
+            .grid-4 {
                 grid-template-columns: 1fr;
+                gap: 0.9rem;
+                margin-bottom: 0.9rem;
             }
-            
-            .battery-metrics {
+
+            .grid-2 {
                 grid-template-columns: 1fr;
+                gap: 0.9rem;
             }
-            
-            .sensors-grid {
-                grid-template-columns: 1fr;
+
+            .glass-card {
+                padding: 1rem 1.1rem;
+                border-radius: 1rem;
             }
-            
-            .stats-overview {
-                grid-template-columns: repeat(2, 1fr);
+
+            h2 {
+                font-size: 0.95rem;
+                margin-bottom: 0.8rem;
             }
-        }
-        
-        @media (max-width: 480px) {
-            .container {
-                padding: 10px;
+
+            .sensor-value {
+                font-size: 1rem;
             }
-            
-            .dashboard-header {
-                padding: 20px;
+
+            .revenue-glow {
+                font-size: 1.15rem;
             }
-            
-            .logo-text h1 {
-                font-size: 1.8rem;
+
+            .sensor-label {
+                font-size: 0.78rem;
             }
-            
-            .card-title {
-                font-size: 1.2rem;
+
+            .health-comp-item > div {
+                font-size: 0.78rem;
             }
-            
-            .stats-overview {
-                grid-template-columns: 1fr;
-            }
-            
-            .temp-value {
-                font-size: 3rem;
+
+            .health-status {
+                font-size: 0.78rem;
             }
         }
-        
-        /* زر التحديث */
-        .refresh-btn {
-            position: fixed;
-            bottom: 30px;
-            left: 30px;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--accent), var(--orange-dark));
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: var(--shadow-lg);
-            transition: all var(--transition-medium);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-        
-        .refresh-btn:hover {
-            transform: rotate(180deg) scale(1.1);
-            box-shadow: 0 0 30px rgba(255, 165, 0, 0.5);
-        }
-        
-        /* تأثيرات دخول للبطاقات */
-        .fade-in {
-            animation: fadeInUp 600ms ease forwards;
-            opacity: 0;
-        }
-        
-        .fade-in.delay-1 { animation-delay: 100ms; }
-        .fade-in.delay-2 { animation-delay: 200ms; }
-        .fade-in.delay-3 { animation-delay: 300ms; }
-        .fade-in.delay-4 { animation-delay: 400ms; }
-        .fade-in.delay-5 { animation-delay: 500ms; }
-        .fade-in.delay-6 { animation-delay: 600ms; }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        /* very small screens */
+        @media (max-width: 380px) {
+            body { padding: 0.55rem; }
+            .glass-card { padding: 0.85rem 0.9rem; }
+            .sensor-row { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+            .sensor-value { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- هيدر الداشبورد -->
-        <header class="dashboard-header fade-in">
-            <div class="logo-section">
-                <i class="fas fa-solar-panel logo-icon"></i>
-                <div class="logo-text">
-                    <h1>الكراج الشمسي الذكي</h1>
-                    <p>نظام مراقبة متكامل - متصل مع ESP32</p>
-                </div>
-            </div>
-            <div class="status-indicator">
-                <div class="status-dot"></div>
-                <div class="status-text">متصل مع ESP32</div>
-            </div>
-        </header>
-        
-        <!-- شبكة البطاقات الرئيسية -->
-        <div class="dashboard-grid">
-            <!-- بطاقة النظام الشمسي -->
-            <div class="dashboard-card fade-in delay-1">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="fas fa-sun"></i>
-                        <h2>النظام الشمسي</h2>
-                    </div>
-                    <div class="card-badge" id="solarStatus">يعمل</div>
-                </div>
-                <div class="solar-status">
-                    <i class="fas fa-solar-panel solar-icon"></i>
-                    <div class="solar-info">
-                        <h3 id="solarPower">1850 واط</h3>
-                        <p>الإنتاج الحالي</p>
-                    </div>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-bar" id="solarProgress" style="width: 75%"></div>
-                </div>
-                <div class="progress-info">
-                    <span>سعة الإنتاج: 2400 واط</span>
-                    <span id="solarPercentage">75%</span>
-                </div>
-            </div>
-            
-            <!-- بطاقة البطاريات -->
-            <div class="dashboard-card fade-in delay-2">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="fas fa-battery-full"></i>
-                        <h2>البطاريات</h2>
-                    </div>
-                    <div class="card-badge" id="batteryStatus">مشحونة</div>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-bar" id="batteryProgress" style="width: 88%"></div>
-                </div>
-                <div class="progress-info">
-                    <span>السعة الحالية</span>
-                    <span id="batteryPercentage">88%</span>
-                </div>
-                <div class="battery-metrics">
-                    <div class="metric-box">
-                        <div class="metric-value" id="batteryVoltage">48.2</div>
-                        <div class="metric-label">فولت</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-value" id="batteryCurrent">25.4</div>
-                        <div class="metric-label">أمبير</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- بطاقة حساسات الكراج -->
-            <div class="dashboard-card fade-in delay-3">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="fas fa-sensor"></i>
-                        <h2>حساسات الكراج</h2>
-                    </div>
-                    <div class="card-badge" id="sensorsStatus">5/5 نشطة</div>
-                </div>
-                <div class="sensors-grid">
-                    <!-- حساس الدخول -->
-                    <div class="sensor-item active" id="sensorEntry">
-                        <div class="sensor-icon active">
-                            <i class="fas fa-sign-in-alt"></i>
-                        </div>
-                        <div class="sensor-info">
-                            <h4>حساس الدخول</h4>
-                            <p>نشط - يعمل</p>
-                        </div>
-                    </div>
-                    
-                    <!-- حساس الخروج -->
-                    <div class="sensor-item active" id="sensorExit">
-                        <div class="sensor-icon active">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </div>
-                        <div class="sensor-info">
-                            <h4>حساس الخروج</h4>
-                            <p>نشط - يعمل</p>
-                        </div>
-                    </div>
-                    
-                    <!-- حساس الركنة A1 -->
-                    <div class="sensor-item active" id="sensorA1">
-                        <div class="sensor-icon active">
-                            <i class="fas fa-car"></i>
-                        </div>
-                        <div class="sensor-info">
-                            <h4>الركنة A1</h4>
-                            <p>نشط - خالية</p>
-                        </div>
-                    </div>
-                    
-                    <!-- حساس الركنة B1 -->
-                    <div class="sensor-item inactive" id="sensorB1">
-                        <div class="sensor-icon inactive">
-                            <i class="fas fa-car"></i>
-                        </div>
-                        <div class="sensor-info">
-                            <h4>الركنة B1</h4>
-                            <p>غير نشط - مشغولة</p>
-                        </div>
-                    </div>
-                    
-                    <!-- حساس الركنة C1 -->
-                    <div class="sensor-item active" id="sensorC1">
-                        <div class="sensor-icon active">
-                            <i class="fas fa-car"></i>
-                        </div>
-                        <div class="sensor-info">
-                            <h4>الركنة C1</h4>
-                            <p>نشط - خالية</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- بطاقة حرارة الكراج -->
-            <div class="dashboard-card fade-in delay-4">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="fas fa-thermometer-half"></i>
-                        <h2>حرارة الكراج</h2>
-                    </div>
-                    <div class="card-badge" id="tempStatus">طبيعية</div>
-                </div>
-                <div class="temperature-display">
-                    <div class="temp-value" id="currentTemp">24.5</div>
-                    <div class="temp-status temp-normal">درجة حرارة طبيعية</div>
-                </div>
-                <div class="progress-info">
-                    <span>المدى الآمن: 18°C - 30°C</span>
-                    <span>الحد الأقصى: 35°C</span>
-                </div>
-            </div>
+<div class="dashboard-container">
+    <!-- HEADER with ESP32 Connection Massive Badge -->
+    <div class="header-flex">
+        <div>
+            <h1><i class="fas fa-solar-panel glowing-icon"></i> Administrators' dashboard</h1>
+            <p class="last-ping-text" id="lastPingText">آخر اتصال: --</p>
         </div>
-        
-        <!-- إحصائيات اليوم -->
-        <div class="stats-overview">
-            <div class="stat-card fade-in delay-5">
-                <i class="fas fa-car stat-icon"></i>
-                <div class="stat-value" id="todayCars">12</div>
-                <div class="stat-label">سيارات دخلت اليوم</div>
-            </div>
-            
-            <div class="stat-card fade-in delay-5">
-                <i class="fas fa-bolt stat-icon"></i>
-                <div class="stat-value" id="energyProduced">42.5</div>
-                <div class="stat-label">كيلوواط/ساعة المنتجة</div>
-            </div>
-            
-            <div class="stat-card fade-in delay-6">
-                <i class="fas fa-tint stat-icon"></i>
-                <div class="stat-value" id="energySaved">85%</div>
-                <div class="stat-label">توفير في الطاقة</div>
-            </div>
-            
-            <div class="stat-card fade-in delay-6">
-                <i class="fas fa-clock stat-icon"></i>
-                <div class="stat-value" id="uptime">99.8%</div>
-                <div class="stat-label">معدل التشغيل</div>
-            </div>
+        <div id="espStatusBadge" class="badge-status online-badge">
+            <i class="fas fa-microchip"></i>
+            <span id="espStatusText">جاري التحميل...</span>
         </div>
-        
-        <!-- تذييل الصفحة -->
-        <footer class="dashboard-footer fade-in">
-            <p>نظام مراقبة الكراج الشمسي الذكي | متصل مع ESP32 | آخر تحديث: <span id="lastUpdate">--:--:--</span></p>
-            <p>جميع الحقوق محفوظة © 2024 سمارت كراج</p>
-        </footer>
     </div>
-    
-    <!-- زر التحديث -->
-    <button class="refresh-btn" id="refreshBtn">
-        <i class="fas fa-sync-alt"></i>
-    </button>
 
-    <script>
-        // بيانات محاكاة للنظام (في الواقع تأتي من ESP32)
-        const mockData = {
-            solar: {
-                power: 1850, // واط
-                maxPower: 2400,
-                status: 'active', // active, inactive
-                charging: true // تغذية البطاريات
-            },
-            battery: {
-                level: 88, // نسبة مئوية
-                voltage: 48.2, // فولت
-                current: 25.4, // أمبير
-                status: 'charging' // charging, discharging, full
-            },
-            sensors: {
-                entry: { active: true, occupied: false },
-                exit: { active: true, occupied: false },
-                a1: { active: true, occupied: false },
-                b1: { active: false, occupied: true },
-                c1: { active: true, occupied: false }
-            },
-            temperature: 24.5, // درجة مئوية
-            stats: {
-                todayCars: 12,
-                energyProduced: 42.5, // كيلوواط/ساعة
-                energySaved: 85, // نسبة مئوية
-                uptime: 99.8 // نسبة مئوية
-            }
-        };
-        
-        // عناصر DOM
-        const elements = {
-            solarStatus: document.getElementById('solarStatus'),
-            solarPower: document.getElementById('solarPower'),
-            solarProgress: document.getElementById('solarProgress'),
-            solarPercentage: document.getElementById('solarPercentage'),
-            
-            batteryStatus: document.getElementById('batteryStatus'),
-            batteryProgress: document.getElementById('batteryProgress'),
-            batteryPercentage: document.getElementById('batteryPercentage'),
-            batteryVoltage: document.getElementById('batteryVoltage'),
-            batteryCurrent: document.getElementById('batteryCurrent'),
-            
-            sensorsStatus: document.getElementById('sensorsStatus'),
-            
-            sensorEntry: document.getElementById('sensorEntry'),
-            sensorExit: document.getElementById('sensorExit'),
-            sensorA1: document.getElementById('sensorA1'),
-            sensorB1: document.getElementById('sensorB1'),
-            sensorC1: document.getElementById('sensorC1'),
-            
-            currentTemp: document.getElementById('currentTemp'),
-            tempStatus: document.getElementById('tempStatus'),
-            
-            todayCars: document.getElementById('todayCars'),
-            energyProduced: document.getElementById('energyProduced'),
-            energySaved: document.getElementById('energySaved'),
-            uptime: document.getElementById('uptime'),
-            
-            lastUpdate: document.getElementById('lastUpdate'),
-            refreshBtn: document.getElementById('refreshBtn')
-        };
-        
-        // تحديث البيانات على الصفحة
-        function updateDashboard(data) {
-            // تحديث النظام الشمسي
-            elements.solarStatus.textContent = data.solar.charging ? 'يغذي البطاريات' : 'لا يغذي';
-            elements.solarStatus.style.background = data.solar.charging 
-                ? 'rgba(46, 204, 113, 0.2)' 
-                : 'rgba(231, 76, 60, 0.2)';
-            elements.solarStatus.style.color = data.solar.charging 
-                ? 'var(--success)' 
-                : 'var(--error)';
-            
-            elements.solarPower.textContent = `${data.solar.power} واط`;
-            const solarPercentage = Math.round((data.solar.power / data.solar.maxPower) * 100);
-            elements.solarProgress.style.width = `${solarPercentage}%`;
-            elements.solarPercentage.textContent = `${solarPercentage}%`;
-            
-            // تحديث البطاريات
-            const batteryStatusText = data.battery.level >= 90 ? 'مشحونة' : 
-                                     data.battery.level >= 50 ? 'شحن جزئي' : 
-                                     data.battery.level >= 20 ? 'شحن منخفض' : 'تفريغ';
-            elements.batteryStatus.textContent = batteryStatusText;
-            elements.batteryProgress.style.width = `${data.battery.level}%`;
-            elements.batteryPercentage.textContent = `${data.battery.level}%`;
-            elements.batteryVoltage.textContent = data.battery.voltage.toFixed(1);
-            elements.batteryCurrent.textContent = data.battery.current.toFixed(1);
-            
-            // تحديث الحساسات
-            const activeSensors = [
-                data.sensors.entry.active,
-                data.sensors.exit.active,
-                data.sensors.a1.active,
-                data.sensors.b1.active,
-                data.sensors.c1.active
-            ].filter(Boolean).length;
-            
-            elements.sensorsStatus.textContent = `${activeSensors}/5 نشطة`;
-            
-            // تحديث كل حساس
-            updateSensor(elements.sensorEntry, data.sensors.entry, 'الدخول');
-            updateSensor(elements.sensorExit, data.sensors.exit, 'الخروج');
-            updateSensor(elements.sensorA1, data.sensors.a1, 'A1');
-            updateSensor(elements.sensorA1, data.sensors.a1, 'A1');
-            updateSensor(elements.sensorB1, data.sensors.b1, 'B1');
-            updateSensor(elements.sensorC1, data.sensors.c1, 'C1');
-            
-            // تحديث الحرارة
-            elements.currentTemp.textContent = data.temperature.toFixed(1);
-            const tempStatus = data.temperature > 30 ? 'مرتفعة' : data.temperature < 18 ? 'منخفضة' : 'طبيعية';
-            elements.tempStatus.textContent = `درجة حرارة ${tempStatus}`;
-            
-            if (tempStatus === 'طبيعية') {
-                elements.tempStatus.className = 'temp-status temp-normal';
-            } else {
-                elements.tempStatus.className = 'temp-status temp-high';
-            }
-            
-            // تحديث الإحصائيات
-            elements.todayCars.textContent = data.stats.todayCars;
-            elements.energyProduced.textContent = data.stats.energyProduced.toFixed(1);
-            elements.energySaved.textContent = `${data.stats.energySaved}%`;
-            elements.uptime.textContent = `${data.stats.uptime}%`;
-            
-            // تحديث وقت التحديث الأخير
-            const now = new Date();
-            elements.lastUpdate.textContent = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+    <!-- row 1: Solar + A1 Charging + B1 Charging (6 sensors total) -->
+    <div class="grid-4">
+        <!-- Solar Card -->
+        <div class="glass-card">
+            <h2><i class="fas fa-sun"></i>  الطاقة الشمسية</h2>
+            <div class="sensor-row">
+                <span class="sensor-label"><i class="fas fa-bolt"></i> الجهد (V)</span>
+                <span class="sensor-value" id="solarVoltage">0.00</span><span class="unit">V</span>
+            </div>
+            <div class="sensor-row">
+                <span class="sensor-label"><i class="fas fa-water"></i> التيار (I)</span>
+                <span class="sensor-value" id="solarCurrent">0.00</span><span class="unit">A</span>
+            </div>
+            <div class="sensor-row">
+                <span class="sensor-label"><i class="fas fa-charging-station"></i> القدرة اللحظية</span>
+                <span class="sensor-value neon-yellow" id="solarPower">0.00</span><span class="unit">W</span>
+            </div>
+            <div class="sensor-row">
+                <span class="sensor-label"><i class="fas fa-database"></i> الإنتاج التراكمي</span>
+                <span class="sensor-value neon-green" id="solarEnergy">0.00</span><span class="unit">Wh</span>
+            </div>
+        </div>
+
+        <!-- Slot A1 Wireless Charging -->
+        <div class="glass-card">
+            <h2><i class="fas fa-car"></i> الموقف A1 <span class="badge-icon" style="font-size:0.8rem;">🔋 لاسلكي</span></h2>
+            <div class="sensor-row">
+                <span class="sensor-label">جهد الشحن (V)</span>
+                <span class="sensor-value" id="a1Voltage">0.00</span><span class="unit">V</span>
+            </div>
+            <div class="sensor-row">
+                <span class="sensor-label">تيار الشحن (A)</span>
+                <span class="sensor-value" id="a1Current">0.00</span><span class="unit">A</span>
+            </div>
+            <div class="sensor-row">
+                <span class="sensor-label">قدرة الشحن (W)</span>
+                <span class="sensor-value neon-yellow" id="a1Power">0.00</span><span class="unit">W</span>
+            </div>
+            <div class="health-status" id="a1HealthStatus">
+                <i class="fas fa-heartbeat"></i> <span>الحساس: --</span>
+            </div>
+        </div>
+
+        <!-- Slot B1 Wired Charging -->
+        <div class="glass-card">
+            <h2><i class="fas fa-car"></i> الموقف B1 <span class="badge-icon" style="font-size:0.8rem;">⚡ سلكي</span></h2>
+            <div class="sensor-row">
+                <span class="sensor-label">جهد الشحن (V)</span>
+                <span class="sensor-value" id="b1Voltage">0.00</span><span class="unit">V</span>
+            </div>
+            <div class="sensor-row">
+                <span class="sensor-label">تيار الشحن (A)</span>
+                <span class="sensor-value" id="b1Current">0.00</span><span class="unit">A</span>
+            </div>
+            <div class="sensor-row">
+                <span class="sensor-label">قدرة الشحن (W)</span>
+                <span class="sensor-value neon-yellow" id="b1Power">0.00</span><span class="unit">W</span>
+            </div>
+            <div class="health-status" id="b1HealthStatus">
+                <i class="fas fa-heartbeat"></i> <span>الحساس: --</span>
+            </div>
+        </div>
+
+        <!-- C1 Regular (health only, no charging) -->
+        <div class="glass-card">
+            <h2><i class="fas fa-parking"></i> الموقف C1 (عادي)</h2>
+            <div class="sensor-row">
+                <span class="sensor-label">النوع</span>
+                <span class="sensor-value">Regular / تقليدي</span>
+            </div>
+            <div class="health-status" id="c1HealthStatus">
+                <i class="fas fa-microchip"></i> <span>حساس الموقف: --</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- row 2: Hardware Health Monitor (5 components) + Traffic & Financial -->
+    <div class="grid-2">
+        <!-- Hardware Health Card: Entry Gate, Exit Gate, A1, B1, C1 -->
+        <div class="glass-card">
+            <h2><i class="fas fa-stethoscope"></i> تشخيص القطع الصحية 5</h2>
+            <div id="healthComponentsList" style="display: flex; flex-direction: column; gap: 0.6rem;">
+                <!-- dynamic 5 lines -->
+                <div class="health-comp-item" id="entryGateHealthItem">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-door-open"></i> بوابة الدخول</span>
+                        <span id="entryGateStatusMsg" class="health-msg">--</span>
+                    </div>
+                </div>
+                <div class="health-comp-item" id="exitGateHealthItem">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-door-closed"></i> بوابة الخروج</span>
+                        <span id="exitGateStatusMsg" class="health-msg">--</span>
+                    </div>
+                </div>
+                <div class="health-comp-item" id="healthA1Item">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-charging-station"></i> محطة A1 لاسلكي</span>
+                        <span id="a1HealthMsg" class="health-msg">--</span>
+                    </div>
+                </div>
+                <div class="health-comp-item" id="healthB1Item">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-plug"></i> محطة B1 سلكي</span>
+                        <span id="b1HealthMsg" class="health-msg">--</span>
+                    </div>
+                </div>
+                <div class="health-comp-item" id="healthC1Item">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-square-parking"></i> موقف C1 عادي</span>
+                        <span id="c1HealthMsg" class="health-msg">--</span>
+                    </div>
+                </div>
+            </div>
+            <div class="last-ping-text" style="margin-top: 0.8rem; text-align: center;">
+                <i class="fas fa-microchip"></i> فحص الأخطاء آني
+            </div>
+        </div>
+
+        <!-- Financial & Traffic Card -->
+        <div class="glass-card">
+            <h2><i class="fas fa-coins"></i> المالية & المرور اليومي</h2>
+            <div class="sensor-row">
+                <span class="sensor-label"><i class="fas fa-car-side"></i> السيارات الداخلة اليوم</span>
+                <span class="sensor-value neon-green" id="carsEnteredToday">0</span>
+            </div>
+            <div class="sensor-row">
+                <span class="sensor-label"><i class="fas fa-car-crash"></i> السيارات الخارجة اليوم</span>
+                <span class="sensor-value" id="carsExitedToday">0</span>
+            </div>
+            <div class="sensor-row">
+                <span class="sensor-label"><i class="fas fa-money-bill-wave"></i> إجمالي الدخل المادي</span>
+                <span class="revenue-glow" id="revenueValue">0</span><span class="unit" style="font-size:1rem;"> دينار عراقي</span>
+            </div>
+            <hr>
+            <div class="health-status">
+                <i class="fas fa-chart-line"></i> تعريفة دخول السيارة: <strong class="neon-yellow">3,000 دينار</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- additional row: gate extra info (optional but consistent) -->
+    <div class="footer-note">
+        نظام التشخيص اللحظي | مزامنة مباشرة مع Firebase RTDB
+    </div>
+</div>
+
+<script>
+    // ------------------------- FIREBASE INIT -------------------------
+    const firebaseConfig = {
+        apiKey: "AIzaSyAR-Ox5VL_669Ruyy6aXmjglqd804zC7ig",
+        databaseURL: "https://smart-garage-database-default-rtdb.firebaseio.com/"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const dbRef = database.ref('smart_garage');
+
+    // Global store for last_ping timestamp (milliseconds)
+    let lastPingTimestamp = null;
+    let onlineInterval = null;
+
+    // DOM Elements
+    const espStatusText = document.getElementById('espStatusText');
+    const espStatusBadge = document.getElementById('espStatusBadge');
+    const lastPingSpan = document.getElementById('lastPingText');
+
+    // Solar
+    const solarVoltageSpan = document.getElementById('solarVoltage');
+    const solarCurrentSpan = document.getElementById('solarCurrent');
+    const solarPowerSpan = document.getElementById('solarPower');
+    const solarEnergySpan = document.getElementById('solarEnergy');
+    // A1
+    const a1VoltageSpan = document.getElementById('a1Voltage');
+    const a1CurrentSpan = document.getElementById('a1Current');
+    const a1PowerSpan = document.getElementById('a1Power');
+    const a1HealthStatusDiv = document.getElementById('a1HealthStatus');
+    // B1
+    const b1VoltageSpan = document.getElementById('b1Voltage');
+    const b1CurrentSpan = document.getElementById('b1Current');
+    const b1PowerSpan = document.getElementById('b1Power');
+    const b1HealthStatusDiv = document.getElementById('b1HealthStatus');
+    // C1 health
+    const c1HealthStatusDiv = document.getElementById('c1HealthStatus');
+    // health specific messages for 5 components
+    const entryGateMsgSpan = document.getElementById('entryGateStatusMsg');
+    const exitGateMsgSpan = document.getElementById('exitGateStatusMsg');
+    const a1HealthMsgSpan = document.getElementById('a1HealthMsg');
+    const b1HealthMsgSpan = document.getElementById('b1HealthMsg');
+    const c1HealthMsgSpan = document.getElementById('c1HealthMsg');
+    // financial
+    const carsEnteredSpan = document.getElementById('carsEnteredToday');
+    const carsExitedSpan = document.getElementById('carsExitedToday');
+    const revenueSpan = document.getElementById('revenueValue');
+
+    // Helper: Update Online Status based on last_ping & current time
+    function updateOnlineStatus() {
+        if (lastPingTimestamp === null) {
+            espStatusText.innerText = "بانتظار البيانات...";
+            espStatusBadge.className = "badge-status offline-badge";
+            return;
         }
-        
-        // تحديث حالة الحساس
-        function updateSensor(element, sensorData, sensorName) {
-            const isActive = sensorData.active;
-            
-            element.classList.remove('active', 'inactive');
-            element.classList.add(isActive ? 'active' : 'inactive');
-            
-            const icon = element.querySelector('.sensor-icon');
-            icon.classList.remove('active', 'inactive');
-            icon.classList.add(isActive ? 'active' : 'inactive');
-            
-            const info = element.querySelector('.sensor-info');
-            const title = info.querySelector('h4');
-            const status = info.querySelector('p');
-            
-            if (sensorName === 'الدخول' || sensorName === 'الخروج') {
-                title.textContent = `حساس ${sensorName}`;
-                status.textContent = isActive ? 'نشط - يعمل' : 'غير نشط - لا يعمل';
-            } else {
-                title.textContent = `الركنة ${sensorName}`;
-                const occupiedText = sensorData.occupied ? 'مشغولة' : 'خالية';
-                status.textContent = isActive ? `نشط - ${occupiedText}` : `غير نشط - ${occupiedText}`;
-            }
+        const now = Date.now();
+        const isOnline = (now - lastPingTimestamp) < 15000;
+        if (isOnline) {
+            espStatusText.innerText = "ESP32 متصل بالإنترنت ✅";
+            espStatusBadge.className = "badge-status online-badge";
+        } else {
+            espStatusText.innerText = "⚠️ تحذير: ESP32 غير متصل - OFFLINE ⚠️";
+            espStatusBadge.className = "badge-status offline-badge";
         }
-        
-        // محاكاة تغيير البيانات (في الواقع تأتي من ESP32)
-        function simulateDataChange() {
-            // تغيير عشوائي في البيانات للمحاكاة
-            mockData.solar.power = Math.max(800, Math.min(2400, 
-                mockData.solar.power + (Math.random() * 200 - 100)));
-            
-            mockData.battery.level = Math.max(20, Math.min(100, 
-                mockData.battery.level + (Math.random() * 4 - 2)));
-            mockData.battery.voltage = Math.max(45, Math.min(52, 
-                mockData.battery.voltage + (Math.random() * 0.5 - 0.25)));
-            mockData.battery.current = Math.max(15, Math.min(40, 
-                mockData.battery.current + (Math.random() * 2 - 1)));
-            
-            // تغيير عشوائي في حالة الحساسات
-            if (Math.random() > 0.9) {
-                mockData.sensors.b1.active = !mockData.sensors.b1.active;
-            }
-            
-            mockData.temperature = Math.max(18, Math.min(32, 
-                mockData.temperature + (Math.random() * 0.5 - 0.25)));
-            
-            // زيادة عدد السيارات بشكل عشوائي
-            if (Math.random() > 0.7) {
-                mockData.stats.todayCars += 1;
-            }
-            
-            // تحديث الطاقة المنتجة
-            mockData.stats.energyProduced += (mockData.solar.power / 1000) * (1 / 3600);
-            
-            return mockData;
+        // update last ping readable time
+        if (lastPingTimestamp) {
+            const dateStr = new Date(lastPingTimestamp).toLocaleString('ar-IQ');
+            lastPingSpan.innerText = `آخر اتصال: ${dateStr}`;
+        } else {
+            lastPingSpan.innerText = "آخر اتصال: غير معروف";
         }
-        
-        // تحديث البيانات من ESP32 (محاكاة)
-        function fetchDataFromESP32() {
-            // في الواقع: هنا سيتم جلب البيانات من ESP32 عبر API
-            // محاكاة لجلب البيانات
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    const updatedData = simulateDataChange();
-                    resolve(updatedData);
-                }, 500);
-            });
+    }
+
+    // Helper to render health message with flashing red if false
+    function getHealthMarkup(isHealthy) {
+        if (isHealthy === true) {
+            return '<span style="color:#00ff88;"><i class="fas fa-check-circle"></i> الحساس سليم 100%</span>';
+        } else {
+            return '<span class="alert-flash"><i class="fas fa-exclamation-triangle"></i> عطل: الحساس تالف أو مفصول!</span>';
         }
+    }
+
+    // main update from database snapshot
+    function updateDashboard(snapshot) {
+        const data = snapshot.val();
+        if (!data) return;
+
+        // 1) System & last_ping
+        if (data.system && typeof data.system.last_ping === 'number') {
+            lastPingTimestamp = data.system.last_ping;
+        } else if (data.system && data.system.last_ping) {
+            lastPingTimestamp = Number(data.system.last_ping);
+        } else {
+            lastPingTimestamp = null;
+        }
+        updateOnlineStatus();
+
+        // 2) Statistics: cars_entered, cars_exited, (cars_today not used for revenue but we use cars_entered)
+        const stats = data.statistics || {};
+        const carsEntered = typeof stats.cars_entered === 'number' ? stats.cars_entered : 0;
+        const carsExited = typeof stats.cars_exited === 'number' ? stats.cars_exited : 0;
+        carsEnteredSpan.innerText = carsEntered;
+        carsExitedSpan.innerText = carsExited;
+        const revenue = carsEntered * 3000;
+        revenueSpan.innerText = revenue.toLocaleString('ar-IQ');
+
+        // 3) Solar Panel
+        const solar = data.solar || {};
+        const solarV = parseFloat(solar.v) || 0;
+        const solarI = parseFloat(solar.i) || 0;
+        const solarPower = solarV * solarI;
+        const totalEnergyWh = parseFloat(solar.total_energy_wh) || 0;
+        solarVoltageSpan.innerText = solarV.toFixed(2);
+        solarCurrentSpan.innerText = solarI.toFixed(2);
+        solarPowerSpan.innerText = solarPower.toFixed(2);
+        solarEnergySpan.innerText = totalEnergyWh.toFixed(1);
+
+        // 4) Gates health
+        const gates = data.gates || {};
+        const entryGateHealthy = gates.entry?.is_healthy === true;
+        const exitGateHealthy = gates.exit?.is_healthy === true;
+        entryGateMsgSpan.innerHTML = getHealthMarkup(entryGateHealthy);
+        exitGateMsgSpan.innerHTML = getHealthMarkup(exitGateHealthy);
+
+        // 5) Parking slots: A1, B1, C1
+        const parking = data.parking || {};
+        // A1
+        const a1 = parking.A1 || {};
+        const a1Healthy = a1.is_healthy === true;
+        const a1Charging = a1.charging_session || {};
+        const a1V = parseFloat(a1Charging.v) || 0;
+        const a1I = parseFloat(a1Charging.i) || 0;
+        const a1Watts = a1V * a1I;
+        a1VoltageSpan.innerText = a1V.toFixed(2);
+        a1CurrentSpan.innerText = a1I.toFixed(2);
+        a1PowerSpan.innerText = a1Watts.toFixed(2);
+        a1HealthStatusDiv.innerHTML = `<i class="fas fa-microchip"></i> ${getHealthMarkup(a1Healthy)}`;
+        a1HealthMsgSpan.innerHTML = getHealthMarkup(a1Healthy);
         
-        // تحديث واجهة المستخدم
-        async function refreshDashboard() {
-            try {
-                // إضافة تأثير للزر
-                elements.refreshBtn.style.transform = 'rotate(180deg)';
-                
-                // جلب البيانات
-                const newData = await fetchDataFromESP32();
-                
-                // تحديث الواجهة
-                updateDashboard(newData);
-                
-                // إعادة الزر لحالته الطبيعية
-                setTimeout(() => {
-                    elements.refreshBtn.style.transform = 'rotate(0deg)';
-                }, 300);
-                
-                console.log('✅ تم تحديث البيانات بنجاح');
-            } catch (error) {
-                console.error('❌ خطأ في تحديث البيانات:', error);
-                elements.refreshBtn.style.transform = 'rotate(0deg)';
+        // B1
+        const b1 = parking.B1 || {};
+        const b1Healthy = b1.is_healthy === true;
+        const b1Charging = b1.charging_session || {};
+        const b1V = parseFloat(b1Charging.v) || 0;
+        const b1I = parseFloat(b1Charging.i) || 0;
+        const b1Watts = b1V * b1I;
+        b1VoltageSpan.innerText = b1V.toFixed(2);
+        b1CurrentSpan.innerText = b1I.toFixed(2);
+        b1PowerSpan.innerText = b1Watts.toFixed(2);
+        b1HealthStatusDiv.innerHTML = `<i class="fas fa-microchip"></i> ${getHealthMarkup(b1Healthy)}`;
+        b1HealthMsgSpan.innerHTML = getHealthMarkup(b1Healthy);
+        
+        // C1 (no charging sensors)
+        const c1 = parking.C1 || {};
+        const c1Healthy = c1.is_healthy === true;
+        c1HealthStatusDiv.innerHTML = `<i class="fas fa-microchip"></i> ${getHealthMarkup(c1Healthy)}`;
+        c1HealthMsgSpan.innerHTML = getHealthMarkup(c1Healthy);
+    }
+
+    // Listen to realtime changes
+    dbRef.on('value', (snapshot) => {
+        updateDashboard(snapshot);
+    }, (error) => {
+        console.error("Firebase read error: ", error);
+        espStatusText.innerText = "⚠️ خطأ في الاتصال بقاعدة البيانات";
+        espStatusBadge.className = "badge-status offline-badge";
+    });
+
+    // Periodic online check (every 1 sec) using stored last_ping
+    if (onlineInterval) clearInterval(onlineInterval);
+    onlineInterval = setInterval(() => {
+        if (lastPingTimestamp !== null) {
+            updateOnlineStatus();
+        }
+    }, 1000);
+
+    // also set initial loading style
+    window.addEventListener('load', () => {
+        // force placeholder data until firebase responds
+        setTimeout(() => {
+            if (lastPingTimestamp === null) {
+                espStatusText.innerText = "بانتظار التحميل...";
             }
-        }
-        
-        // تهيئة الصفحة
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('🚀 تم تحميل داشبورد الكراج الشمسي');
-            
-            // تحديث البيانات الأولية
-            updateDashboard(mockData);
-            
-            // تحديث البيانات كل 10 ثواني (محاكاة للاتصال الحقيقي)
-            setInterval(refreshDashboard, 10000);
-            
-            // إعداد مستمع حدث لزر التحديث
-            elements.refreshBtn.addEventListener('click', refreshDashboard);
-            
-            // إضافة تأثيرات ظهور للبطاقات
-            const cards = document.querySelectorAll('.fade-in');
-            cards.forEach((card, index) => {
-                card.style.animationDelay = `${index * 100}ms`;
-            });
-            
-            // بدء تحديث تلقائي بعد 5 ثواني
-            setTimeout(refreshDashboard, 5000);
-        });
-        
-        // دالة للاتصال الحقيقي مع ESP32
-        async function connectToESP32() {
-            // مثال للاتصال الحقيقي مع ESP32
-            /*
-            try {
-                const response = await fetch('http://esp32-ip-address/api/data');
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                console.error('فشل الاتصال بـ ESP32:', error);
-                return null;
-            }
-            */
-        }
-    </script>
+        }, 500);
+    });
+</script>
 </body>
 </html>
