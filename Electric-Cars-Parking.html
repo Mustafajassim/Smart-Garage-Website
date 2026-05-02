@@ -168,7 +168,7 @@
             gap: 25px;
         }
         
-        /* الصف العلوي (B1-B6) */
+        /* الصف العلوي */
         .top-row {
             display: flex;
             justify-content: center;
@@ -200,7 +200,7 @@
             border: 2px solid rgba(255, 153, 0, 0.1);
         }
         
-        /* المنطقة الوسطى - بنفس لون الأقسام */
+        /* المنطقة الوسطى */
         .center-section {
             display: flex;
             flex-direction: column;
@@ -220,7 +220,7 @@
             margin-bottom: 15px;
         }
         
-        /* حاوية البوابات داخل المنطقة الوسطى */
+        /* حاوية البوابات */
         .gates-container {
             display: flex;
             justify-content: space-between;
@@ -298,6 +298,28 @@
             align-items: center;
             gap: 5px;
         }
+
+        /* ===== Mini charging data shown inside A1/B1 slot card ===== */
+        .slot-charging-mini {
+            display: none;
+            margin-top: 5px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.55rem;
+            color: rgba(255,255,255,0.75);
+            line-height: 1.4;
+            border-top: 1px solid rgba(255,165,0,0.3);
+            padding-top: 4px;
+        }
+        .slot-charging-mini span {
+            display: inline-block;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        /* Show mini data only when slot is occupied/charging */
+        .parking-slot.charging-active .slot-charging-mini {
+            display: block;
+        }
         
         .status-indicator {
             display: inline-block;
@@ -316,7 +338,7 @@
             box-shadow: 0 0 8px var(--occupied);
         }
         
-        /* تفاصيل ESP */
+        /* ===== ESP Details Modal ===== */
         .esp-details {
             background: rgba(15, 20, 38, 0.95);
             border-radius: 20px;
@@ -356,7 +378,8 @@
             cursor: pointer;
             font-size: 1.1rem;
         }
-        
+
+        /* ===== Revamped sensor-data grid: 2 cards only ===== */
         .sensor-data {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -386,33 +409,82 @@
             font-size: 1.4rem;
             color: white;
         }
-        
-        /* حالة الاتصال */
-        .connection-status {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            padding: 10px 15px;
-            border-radius: 10px;
+
+        /* ===== Timer value styling ===== */
+        #slotTimer {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            color: var(--accent);
+        }
+
+        /* ===== Charging session section inside modal ===== */
+        .charging-section {
+            display: none;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255,165,0,0.4);
+        }
+        .charging-section.visible {
+            display: block;
+        }
+        .charging-section-title {
+            color: var(--accent);
+            font-size: 1.1rem;
             font-weight: bold;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
-            z-index: 1000;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            font-size: 0.9rem;
         }
-        
-        .status-connected {
-            background: rgba(0, 255, 0, 0.2);
-            color: #00ff00;
-            border: 2px solid #00ff00;
+        .charging-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
         }
-        
-        .status-disconnected {
-            background: rgba(255, 0, 0, 0.2);
-            color: #ff0000;
-            border: 2px solid #ff0000;
+        .charging-data-item {
+            background: rgba(255,165,0,0.08);
+            border: 1px solid rgba(255,165,0,0.35);
+            border-radius: 10px;
+            padding: 10px 8px;
+            text-align: center;
+        }
+        .charging-data-label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.65);
+            margin-bottom: 5px;
+        }
+        .charging-data-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffd166;
+        }
+
+        /* ===== MOD 1: Minimalist connection dot ===== */
+        #connectionDot {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            z-index: 9999;
+            background: #ff2222;
+            box-shadow: 0 0 0 0 rgba(255,34,34,0.7);
+            animation: dotBlink 1s ease-in-out infinite;
+        }
+        #connectionDot.online {
+            background: #00ff88;
+            box-shadow: 0 0 8px 3px rgba(0,255,136,0.6);
+            animation: dotGlow 2s ease-in-out infinite;
+        }
+        @keyframes dotGlow {
+            0%, 100% { box-shadow: 0 0 6px 2px rgba(0,255,136,0.5); }
+            50%       { box-shadow: 0 0 14px 5px rgba(0,255,136,0.85); }
+        }
+        @keyframes dotBlink {
+            0%, 100% { opacity: 1; box-shadow: 0 0 6px 2px rgba(255,34,34,0.6); }
+            50%       { opacity: 0.25; box-shadow: none; }
         }
         
         /* التنبيه التفاعلي */
@@ -481,9 +553,8 @@
         .delay-4 { animation-delay: 0.4s; }
         .delay-5 { animation-delay: 0.5s; }
         
-        /* ===== Responsive Design — all screen sizes ===== */
+        /* ===== Responsive Design ===== */
 
-        /* Tablets & small laptops (≤992px) */
         @media (max-width: 992px) {
             .logo-text h1 { font-size: 1.8rem; }
             .main-title { font-size: 1.7rem; }
@@ -493,7 +564,6 @@
             .gate { padding: 8px 12px; font-size: 0.9rem; min-width: 100px; }
         }
 
-        /* Large phones & small tablets (≤768px) */
         @media (max-width: 768px) {
             body { padding: 10px; }
             .logo-text h1 { font-size: 1.5rem; }
@@ -510,7 +580,6 @@
             .sensor-data { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* Standard phones (≤600px) — 3-column map layout preserved */
         @media (max-width: 600px) {
             body { padding: 8px; }
             .logo-text h1 { font-size: 1.25rem; }
@@ -523,7 +592,6 @@
             .mini-map { overflow: visible; padding: 10px; }
             .map-container { min-width: unset; gap: 10px; }
 
-            /* Top row: 6 slots in one line */
             .top-row { gap: 4px; padding: 8px; flex-wrap: nowrap; }
             .top-row .parking-slot {
                 flex: 1 1 0;
@@ -533,7 +601,6 @@
                 padding: 4px 2px;
             }
 
-            /* Middle row: 3-column layout */
             .middle-row { grid-template-columns: 1fr 2fr 1fr; gap: 5px; }
             .left-section, .right-section { padding: 6px 4px; gap: 5px; }
             .center-section { padding: 6px 4px; min-height: unset; }
@@ -555,12 +622,13 @@
             .mini-map h3 { font-size: 1.1rem; margin-bottom: 12px; }
             .sensor-data { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .data-value { font-size: 1.1rem; }
+            #slotTimer { font-size: 1.1rem; }
             .note h3 { font-size: 1.1rem; }
             .note p { font-size: 0.9rem; }
-            .connection-status { font-size: 0.75rem; padding: 7px 10px; top: 8px; right: 8px; }
+            .slot-charging-mini { font-size: 0.45rem; }
+            .charging-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* Small phones (≤400px — e.g. older Androids, iPhone SE) */
         @media (max-width: 400px) {
             body { padding: 6px; }
             .logo-icon { font-size: 1.8rem; }
@@ -586,7 +654,6 @@
             .data-label { font-size: 0.8rem; }
         }
 
-        /* Very small phones (≤320px) */
         @media (max-width: 320px) {
             .logo-text h1 { font-size: 0.95rem; }
             .slot-id { font-size: 0.58rem; }
@@ -597,11 +664,9 @@
     </style>
 </head>
 <body>
-    <!-- مؤشر حالة الاتصال -->
-    <div id="connectionStatus" class="connection-status status-disconnected">
-        <i class="fas fa-cloud"></i>
-        <span>جاري الاتصال...</span>
-    </div>
+
+    <!-- MOD 1: Minimalist connection dot -->
+    <div id="connectionDot"></div>
     
     <!-- رسالة تحديث -->
     <div id="updateMessage" class="update-message">
@@ -630,64 +695,14 @@
                 <div class="mini-map">
                     <h3><i class="fas fa-map-marked-alt"></i> خريطة الكراج</h3>
                     <div class="map-container">
-                        <!-- الصف العلوي: B1 إلى B6 -->
+
+                        <!-- ===== TOP ROW — Regular Cars (C1–C6) ===== -->
+                        <!-- MOD 1: Added C6 slot + flex-direction: row-reverse so C1 is leftmost, C6 rightmost -->
                         <div>
                             <div class="group-label" style="margin-bottom:12px;">
-                                <i class="fas fa-plug"></i> Charging Cables
+                                <i class="fas fa-car"></i> Regular Cars
                             </div>
-                            <div class="top-row">
-                            <div class="parking-slot fade-in delay-1" data-slot="B1">
-                                <div class="slot-id">B1</div>
-                                <div class="slot-status">
-                                    <span class="status-indicator status-available"></span>
-                                    <span id="status-B1">متاح</span>
-                                </div>
-                            </div>
-                            <div class="parking-slot fade-in delay-2" data-slot="B2">
-                                <div class="slot-id">B2</div>
-                                <div class="slot-status">
-                                    <span class="status-indicator status-occupied"></span>
-                                    مشغول
-                                </div>
-                            </div>
-                            <div class="parking-slot fade-in delay-3" data-slot="B3">
-                                <div class="slot-id">B3</div>
-                                <div class="slot-status">
-                                    <span class="status-indicator status-occupied"></span>
-                                    مشغول
-                                </div>
-                            </div>
-                            <div class="parking-slot fade-in delay-4" data-slot="B4">
-                                <div class="slot-id">B4</div>
-                                <div class="slot-status">
-                                    <span class="status-indicator status-occupied"></span>
-                                    مشغول
-                                </div>
-                            </div>
-                            <div class="parking-slot fade-in delay-5" data-slot="B5">
-                                <div class="slot-id">B5</div>
-                                <div class="slot-status">
-                                    <span class="status-indicator status-occupied"></span>
-                                    مشغول
-                                </div>
-                            </div>
-                            <div class="parking-slot fade-in delay-5" data-slot="B6">
-                                <div class="slot-id">B6</div>
-                                <div class="slot-status">
-                                    <span class="status-indicator status-occupied"></span>
-                                    مشغول
-                                </div>
-                            </div>
-                        </div>
-                        </div>
-                        
-                        <!-- الصف الأوسط -->
-                        <div class="middle-row">
-                            <!-- القسم الأيسر C1-C5 -->
-                            <div class="left-section">
-                                <div class="group-label">
-                                    <i class="fas fa-car"></i> Regular Cars
-                                </div>
+                            <div class="top-row" style="flex-direction: row-reverse;">
                                 <div class="parking-slot fade-in delay-1" data-slot="C1">
                                     <div class="slot-id">C1</div>
                                     <div class="slot-status">
@@ -709,20 +724,82 @@
                                         مشغول
                                     </div>
                                 </div>
-                                <div class="parking-slot fade-in delay-1" data-slot="C4">
+                                <div class="parking-slot fade-in delay-4" data-slot="C4">
                                     <div class="slot-id">C4</div>
                                     <div class="slot-status">
                                         <span class="status-indicator status-occupied"></span>
                                         مشغول
                                     </div>
                                 </div>
-                                <div class="parking-slot fade-in delay-2" data-slot="C5">
+                                <div class="parking-slot fade-in delay-5" data-slot="C5">
                                     <div class="slot-id">C5</div>
                                     <div class="slot-status">
                                         <span class="status-indicator status-occupied"></span>
                                         مشغول
                                     </div>
                                 </div>
+                                <!-- MOD 1: New C6 slot -->
+                                <div class="parking-slot fade-in delay-5" data-slot="C6">
+                                    <div class="slot-id">C6</div>
+                                    <div class="slot-status">
+                                        <span class="status-indicator status-occupied"></span>
+                                        مشغول
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- الصف الأوسط -->
+                        <div class="middle-row">
+
+                            <!-- القسم الأيسر: Wired Charging (B1–B5) — B6 DELETED per MOD 2 -->
+                            <div class="left-section">
+                                <div class="group-label">
+                                    <i class="fas fa-plug"></i> Charging Cables
+                                </div>
+                                <!-- B1 with mini charging data display -->
+                                <div class="parking-slot fade-in delay-1" data-slot="B1">
+                                    <div class="slot-id">B1</div>
+                                    <div class="slot-status">
+                                        <span class="status-indicator status-available"></span>
+                                        <span id="status-B1">متاح</span>
+                                    </div>
+                                    <div class="slot-charging-mini" id="mini-B1">
+                                        <span id="mini-B1-v">0.00</span>V &nbsp;
+                                        <span id="mini-B1-i">0.00</span>A<br>
+                                        <span id="mini-B1-w">0.00</span>W &nbsp;
+                                        <span id="mini-B1-wh">0.00</span>Wh
+                                    </div>
+                                </div>
+                                <div class="parking-slot fade-in delay-2" data-slot="B2">
+                                    <div class="slot-id">B2</div>
+                                    <div class="slot-status">
+                                        <span class="status-indicator status-occupied"></span>
+                                        مشغول
+                                    </div>
+                                </div>
+                                <div class="parking-slot fade-in delay-3" data-slot="B3">
+                                    <div class="slot-id">B3</div>
+                                    <div class="slot-status">
+                                        <span class="status-indicator status-occupied"></span>
+                                        مشغول
+                                    </div>
+                                </div>
+                                <div class="parking-slot fade-in delay-4" data-slot="B4">
+                                    <div class="slot-id">B4</div>
+                                    <div class="slot-status">
+                                        <span class="status-indicator status-occupied"></span>
+                                        مشغول
+                                    </div>
+                                </div>
+                                <div class="parking-slot fade-in delay-5" data-slot="B5">
+                                    <div class="slot-id">B5</div>
+                                    <div class="slot-status">
+                                        <span class="status-indicator status-occupied"></span>
+                                        مشغول
+                                    </div>
+                                </div>
+                                <!-- B6 DELETED -->
                             </div>
                             
                             <!-- المنطقة الوسطى مع البوابات -->
@@ -740,16 +817,23 @@
                                 </div>
                             </div>
                             
-                            <!-- القسم الأيمن A1-A5 -->
+                            <!-- القسم الأيمن — Wireless Charging (A1–A5) -->
                             <div class="right-section">
                                 <div class="group-label">
                                     <i class="fas fa-wifi"></i> Wireless Charging
                                 </div>
+                                <!-- A1 with mini charging data display -->
                                 <div class="parking-slot fade-in delay-1" data-slot="A1">
                                     <div class="slot-id">A1</div>
                                     <div class="slot-status">
                                         <span class="status-indicator status-available"></span>
                                         <span id="status-A1">متاح</span>
+                                    </div>
+                                    <div class="slot-charging-mini" id="mini-A1">
+                                        <span id="mini-A1-v">0.00</span>V &nbsp;
+                                        <span id="mini-A1-i">0.00</span>A<br>
+                                        <span id="mini-A1-w">0.00</span>W &nbsp;
+                                        <span id="mini-A1-wh">0.00</span>Wh
                                     </div>
                                 </div>
                                 <div class="parking-slot fade-in delay-2" data-slot="A2">
@@ -785,7 +869,11 @@
                     </div>
                 </div>
                 
-                <!-- تفاصيل ESP -->
+                <!-- =====================================================
+                     MOD 3: Revamped espDetails Modal
+                     — Only shows: Slot Name, Status, Timer, + Charging
+                       section (A1 / B1 only)
+                     ===================================================== -->
                 <div class="esp-details" id="espDetails">
                     <div class="details-header">
                         <h3 id="detailsTitle">تفاصيل الموقف</h3>
@@ -793,26 +881,49 @@
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
+
+                    <!-- 2-card grid: Status + Live Occupancy Timer -->
                     <div class="sensor-data">
                         <div class="data-item">
-                            <div class="data-label"><i class="fas fa-car"></i> حالة الموقف:</div>
+                            <div class="data-label">
+                                <i class="fas fa-car"></i> حالة الموقف
+                            </div>
                             <div class="data-value" id="slotStatus">متاح</div>
                         </div>
                         <div class="data-item">
-                            <div class="data-label"><i class="fas fa-bolt"></i> التيار (mA):</div>
-                            <div class="data-value" id="currentLevel">0</div>
+                            <div class="data-label">
+                                <i class="fas fa-stopwatch"></i> مدة الحجز
+                            </div>
+                            <div class="data-value" id="slotTimer">00:00:00</div>
                         </div>
-                        <div class="data-item">
-                            <div class="data-label"><i class="fas fa-bolt"></i> الجهد (V):</div>
-                            <div class="data-value" id="voltageLevel">0</div>
+                    </div>
+
+                    <!-- Charging session block — visible ONLY for A1 and B1 -->
+                    <div class="charging-section" id="chargingSection">
+                        <div class="charging-section-title">
+                            <i class="fas fa-charging-station"></i> بيانات جلسة الشحن
                         </div>
-                        <div class="data-item">
-                            <div class="data-label"><i class="fas fa-temperature-high"></i> درجة الحرارة:</div>
-                            <div class="data-value" id="temperature">0°C</div>
-                        </div>
-                        <div class="data-item">
-                            <div class="data-label"><i class="fas fa-clock"></i> آخر تحديث:</div>
-                            <div class="data-value" id="lastUpdate">00:00:00</div>
+                        <div class="charging-grid">
+                            <div class="charging-data-item">
+                                <div class="charging-data-label">الجهد (V)</div>
+                                <div class="charging-data-value" id="cs-voltage">0.00</div>
+                            </div>
+                            <div class="charging-data-item">
+                                <div class="charging-data-label">التيار (A)</div>
+                                <div class="charging-data-value" id="cs-current">0.00</div>
+                            </div>
+                            <div class="charging-data-item">
+                                <div class="charging-data-label">القدرة اللحظية (W)</div>
+                                <div class="charging-data-value" id="cs-power">0.00</div>
+                            </div>
+                            <div class="charging-data-item">
+                                <div class="charging-data-label">الطاقة التراكمية (Wh)</div>
+                                <div class="charging-data-value" id="cs-energy">0.00</div>
+                            </div>
+                            <div class="charging-data-item">
+                                <div class="charging-data-label">التكلفة الإجمالية (د.ع)</div>
+                                <div class="charging-data-value" id="cs-cost">0.00</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -845,26 +956,56 @@
             appId: "1:1066839766442:web:7b2a0f2218aa769ed0e6be"
         };
 
-        // تهيئة Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
         // ==================== متغيرات ====================
-        let firebaseConnected = false;
+        let lastPingTime       = 0;
         let currentSelectedSlot = null;
-        
-        // المواقف الحقيقية (المرتبطة بـ Firebase)
-        const realSlots = ['A1', 'B1', 'C1'];
-        
-        // بيانات المواقف الحقيقية (افتراضية)
+
+        // MOD 4: Global object to locally track occupation start times
+        let slotStartTimes = {};
+
+        // Real slots monitored via Firebase
+        const realSlots     = ['A1', 'B1', 'C1'];
+        // Charging slots that expose a charging_session sub-object
+        const chargingSlots = ['A1', 'B1'];
+
         let slotData = {
-            'A1': { status: 'متاح', current: 0, voltage: 0, temperature: 30, lastUpdate: 'online' },
-            'B1': { status: 'متاح', current: 0, voltage: 0, temperature: 30, lastUpdate: 'online' },
-            'C1': { status: 'متاح', current: 0, voltage: 0, temperature: 30, lastUpdate: 'online' }
+            'A1': { status: 'متاح', isOccupied: false, isCharging: false, current: 0, voltage: 0,
+                    cs: { voltage: 0, current: 0, power: 0, energy: 0, cost: 0, active: false } },
+            'B1': { status: 'متاح', isOccupied: false, isCharging: false, current: 0, voltage: 0,
+                    cs: { voltage: 0, current: 0, power: 0, energy: 0, cost: 0, active: false } },
+            'C1': { status: 'متاح', isOccupied: false, isCharging: false, current: 0, voltage: 0 }
         };
 
-        // المواقف الوهمية (دائماً مشغولة)
-        const virtualSlots = ['A2','A3','A4','A5','B2','B3','B4','B5','B6','C2','C3','C4','C5'];
+        // MOD 1 (B6 removed) + MOD 1 top-row (C6 added)
+        const virtualSlots = ['A2','A3','A4','A5','B2','B3','B4','B5','C2','C3','C4','C5','C6'];
+
+        // ==================== Connection Dot ====================
+        function updateConnectionDot() {
+            const dot     = document.getElementById('connectionDot');
+            const elapsed = Date.now() - lastPingTime;
+            if (lastPingTime > 0 && elapsed <= 15000) {
+                dot.classList.add('online');
+            } else {
+                dot.classList.remove('online');
+            }
+        }
+
+        function monitorPing() {
+            database.ref('smart_garage/last_ping').on('value', (snap) => {
+                const val = snap.val();
+                if (val) {
+                    const t = typeof val === 'number' ? val : Date.parse(val);
+                    if (!isNaN(t)) lastPingTime = t;
+                    else            lastPingTime = Date.now();
+                }
+                updateConnectionDot();
+            });
+        }
+
+        setInterval(updateConnectionDot, 5000);
 
         // ==================== دوال ====================
         function showUpdateMessage(msg) {
@@ -874,42 +1015,98 @@
             setTimeout(() => el.classList.remove('show'), 2000);
         }
 
-        function updateConnectionStatus() {
-            const el = document.getElementById('connectionStatus');
-            if (firebaseConnected) {
-                el.className = 'connection-status status-connected';
-                el.innerHTML = '<i class="fas fa-cloud"></i><span>متصل بـ Firebase</span>';
+        // ==================== Zero-reset helpers ====================
+        function buildChargingSession(csData, isOccupied, isCharging) {
+            // If not occupied OR not charging → zero out everything (MOD 4 zero-reset)
+            const active = isOccupied && isCharging;
+            if (!active || !csData) {
+                return { voltage: 0, current: 0, power: 0, energy: 0, cost: 0, active: false };
+            }
+            const v   = parseFloat(csData.voltage  || 0);
+            const i   = parseFloat(csData.current  || 0);
+            const w   = parseFloat(csData.power    || (v * i));
+            const wh  = parseFloat(csData.energy   || csData.cumulative_energy || 0);
+            const cost = wh * 10;
+            return { voltage: v, current: i, power: w, energy: wh, cost: cost, active: true };
+        }
+
+        // Update the tiny in-slot data (A1 / B1)
+        function updateMiniCharging(slotId) {
+            const d      = slotData[slotId];
+            if (!d || !d.cs) return;
+            const slotEl = document.querySelector(`[data-slot="${slotId}"]`);
+            if (!slotEl) return;
+            const cs = d.cs;
+            if (cs.active) {
+                slotEl.classList.add('charging-active');
+                document.getElementById(`mini-${slotId}-v`).textContent  = cs.voltage.toFixed(2);
+                document.getElementById(`mini-${slotId}-i`).textContent  = cs.current.toFixed(2);
+                document.getElementById(`mini-${slotId}-w`).textContent  = cs.power.toFixed(2);
+                document.getElementById(`mini-${slotId}-wh`).textContent = cs.energy.toFixed(2);
             } else {
-                el.className = 'connection-status status-disconnected';
-                el.innerHTML = '<i class="fas fa-cloud"></i><span>غير متصل</span>';
+                slotEl.classList.remove('charging-active');
+                document.getElementById(`mini-${slotId}-v`).textContent  = '0.00';
+                document.getElementById(`mini-${slotId}-i`).textContent  = '0.00';
+                document.getElementById(`mini-${slotId}-w`).textContent  = '0.00';
+                document.getElementById(`mini-${slotId}-wh`).textContent = '0.00';
             }
         }
 
-        // مراقبة موقف حقيقي
+        // ==================== Firebase Slot Monitor ====================
         function monitorSlot(slotId) {
             const ref = database.ref(`smart_garage/parking/${slotId}`);
             ref.on('value', (snap) => {
                 const data = snap.val();
                 if (data) {
-                    const isOccupied = data.occupied === true;
-                    let current = data.charging?.current || 0;
-                    let voltage = data.charging?.voltage || 0;
+                    const isOccupied = data.occupied    === true;
+                    const isCharging = data.is_charging === true;
+
+                    // MOD 4: Track start time locally
+                    if (isOccupied && !slotStartTimes[slotId]) {
+                        // Slot just became occupied — record now
+                        slotStartTimes[slotId] = Date.now();
+                    } else if (!isOccupied && slotStartTimes[slotId]) {
+                        // Slot just freed — clear timer
+                        delete slotStartTimes[slotId];
+                    }
+
+                    const current = data.charging?.current || 0;
+                    const voltage = data.charging?.voltage || 0;
+
                     slotData[slotId] = {
-                        status: isOccupied ? 'مشغول' : 'متاح',
-                        current: current,
-                        voltage: voltage,
-                        temperature: data.temperature || 30,
-                        lastUpdate: data.last_update || getCurrentTime()
+                        status:     isOccupied ? 'مشغول' : 'متاح',
+                        isOccupied: isOccupied,
+                        isCharging: isCharging,
+                        current:    current,
+                        voltage:    voltage,
+                        temperature: data.temperature  || 30,
+                        lastUpdate:  data.last_update  || getCurrentTime()
                     };
+
+                    // Build charging session for A1 / B1
+                    if (chargingSlots.includes(slotId)) {
+                        const csRaw = data.charging_session || null;
+                        slotData[slotId].cs = buildChargingSession(csRaw, isOccupied, isCharging);
+                        updateMiniCharging(slotId);
+                    }
+
                     updateSlotUI(slotId);
                     if (currentSelectedSlot === slotId) updateSlotDetails(slotId);
-                    firebaseConnected = true;
-                    updateConnectionStatus();
+
+                    // Keep connection timestamp fresh
+                    if (data.last_ping) {
+                        const t = typeof data.last_ping === 'number'
+                            ? data.last_ping
+                            : Date.parse(data.last_ping);
+                        if (!isNaN(t) && t > lastPingTime) lastPingTime = t;
+                    } else {
+                        lastPingTime = Date.now();
+                    }
+                    updateConnectionDot();
                 }
             }, (error) => {
                 console.error(error);
-                firebaseConnected = false;
-                updateConnectionStatus();
+                updateConnectionDot();
             });
         }
 
@@ -917,10 +1114,11 @@
             realSlots.forEach(id => monitorSlot(id));
         }
 
+        // ==================== UI Updates ====================
         function updateSlotUI(slotId) {
             const slotEl = document.querySelector(`[data-slot="${slotId}"]`);
             if (!slotEl) return;
-            const data = slotData[slotId];
+            const data       = slotData[slotId];
             const statusSpan = document.getElementById(`status-${slotId}`);
             if (statusSpan) {
                 statusSpan.textContent = data.status;
@@ -930,34 +1128,79 @@
             if (indicator) {
                 indicator.className = `status-indicator ${data.status === 'متاح' ? 'status-available' : 'status-occupied'}`;
             }
-            // تأثير وميض
+            // Flash highlight on update
             slotEl.style.backgroundColor = 'rgba(255,165,0,0.3)';
             setTimeout(() => slotEl.style.backgroundColor = '', 300);
         }
 
+        // MOD 3: Revamped modal — shows only Name, Status, Timer, + Charging (A1/B1)
         function updateSlotDetails(slotId) {
             const d = slotData[slotId];
             if (!d) return;
+
+            // Header: slot name
             document.getElementById('detailsTitle').textContent = `تفاصيل الموقف ${slotId}`;
-            document.getElementById('slotStatus').textContent = d.status;
-            document.getElementById('currentLevel').textContent = Math.round(d.current * 1000) + ' mA';
-            document.getElementById('voltageLevel').textContent = d.voltage.toFixed(2) + ' V';
-            document.getElementById('temperature').textContent = d.temperature.toFixed(1) + '°C';
-            document.getElementById('lastUpdate').textContent = d.lastUpdate;
+
+            // Status card
+            const statusEl = document.getElementById('slotStatus');
+            statusEl.textContent = d.status;
+            statusEl.style.color = d.status === 'متاح' ? '#00ff00' : '#ff0000';
+
+            // Charging section: visible only for A1 / B1
+            const csSection = document.getElementById('chargingSection');
+            if (chargingSlots.includes(slotId) && d.cs) {
+                csSection.classList.add('visible');
+                const cs = d.cs;
+                // MOD 4 Zero-reset: if not occupied OR not charging → render 0.00
+                document.getElementById('cs-voltage').textContent = cs.voltage.toFixed(2);
+                document.getElementById('cs-current').textContent = cs.current.toFixed(2);
+                document.getElementById('cs-power').textContent   = cs.power.toFixed(2);
+                document.getElementById('cs-energy').textContent  = cs.energy.toFixed(2);
+                document.getElementById('cs-cost').textContent    = cs.cost.toFixed(0);
+            } else {
+                csSection.classList.remove('visible');
+            }
         }
 
+        // ==================== MOD 4: 1-second Timer Interval ====================
+        function formatHHMMSS(totalSeconds) {
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = totalSeconds % 60;
+            return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+        }
+
+        setInterval(() => {
+            if (!currentSelectedSlot) return;
+            const timerEl = document.getElementById('slotTimer');
+            if (!timerEl) return;
+
+            const startTime = slotStartTimes[currentSelectedSlot];
+            if (startTime) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                timerEl.textContent = formatHHMMSS(elapsed);
+            } else {
+                timerEl.textContent = '00:00:00';
+            }
+        }, 1000);
+
+        // ==================== Helpers ====================
         function getCurrentTime() {
             const d = new Date();
-            return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
+            return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
         }
 
-        // ==================== أحداث ====================
+        // ==================== Event Listeners ====================
         document.addEventListener('DOMContentLoaded', () => {
+
+            // Slot click → open modal
             document.querySelectorAll('.parking-slot').forEach(slot => {
-                slot.addEventListener('click', function() {
+                slot.addEventListener('click', function () {
                     const id = this.dataset.slot;
                     if (realSlots.includes(id)) {
                         currentSelectedSlot = id;
+                        // Reset timer display immediately to avoid stale value flash
+                        document.getElementById('slotTimer').textContent = '00:00:00';
                         updateSlotDetails(id);
                         document.getElementById('espDetails').classList.add('active');
                         document.getElementById('espDetails').scrollIntoView({ behavior: 'smooth' });
@@ -967,12 +1210,13 @@
                 });
             });
 
-            document.getElementById('closeDetails').addEventListener('click', function() {
+            // Close modal
+            document.getElementById('closeDetails').addEventListener('click', function () {
                 document.getElementById('espDetails').classList.remove('active');
                 currentSelectedSlot = null;
             });
 
-            // تعيين المواقف الوهمية كمشغولة دائماً
+            // Mark virtual slots as always occupied
             virtualSlots.forEach(id => {
                 const el = document.querySelector(`[data-slot="${id}"]`);
                 if (el) {
@@ -983,9 +1227,10 @@
                 }
             });
 
-            // بدء مراقبة Firebase
+            // Start Firebase monitoring
             setTimeout(() => {
                 try {
+                    monitorPing();
                     startMonitoring();
                     showUpdateMessage('جاري الاتصال...');
                 } catch (e) {
@@ -993,16 +1238,9 @@
                 }
             }, 1000);
 
-            // تحديث الوقت كل ثانية
+            // Periodic reconnect attempt
             setInterval(() => {
-                if (firebaseConnected && currentSelectedSlot) {
-                    updateSlotDetails(currentSelectedSlot);
-                }
-            }, 3000);
-
-            // محاولة إعادة الاتصال
-            setInterval(() => {
-                if (!firebaseConnected) startMonitoring();
+                startMonitoring();
             }, 15000);
         });
     </script>
